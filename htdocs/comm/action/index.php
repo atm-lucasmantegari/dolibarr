@@ -758,6 +758,9 @@ if ($type) {
 if ($status == '0') {
 	$sql .= " AND a.percent = 0";
 }
+/**
+* BACKPORT ATHRIUM modification du if
+*/
 if ($status == 'na') {
 	// Not applicable
 	$sql .= " AND a.percent = -1";
