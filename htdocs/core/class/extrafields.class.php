@@ -1779,7 +1779,8 @@ class ExtraFields
 					}
 				}
 			}
-			$value = '<div class="select2-container-multi-dolibarr" style="width: 90%;"><ul class="select2-choices-dolibarr">'.implode(' ', $toprint).'</ul></div>';
+			//overflow:auto;max-height:100px; spec sgp
+			$value = '<div class="select2-container-multi-dolibarr" style="width: 90%;overflow:auto;max-height:100px;"><ul class="select2-choices-dolibarr">'.implode(' ', $toprint).'</ul></div>';
 		} elseif ($type == 'chkbxlst') {
 			$value_arr = explode(',', $value);
 
@@ -1868,7 +1869,8 @@ class ExtraFields
 						}
 					}
 				}
-				if (!empty($toprint)) $value = '<div class="select2-container-multi-dolibarr" style="width: 90%;"><ul class="select2-choices-dolibarr">'.implode(' ', $toprint).'</ul></div>';
+				//overflow:auto;max-height:100px; spec sgp
+				if (!empty($toprint)) $value = '<div class="select2-container-multi-dolibarr" style="width: 90%;overflow:auto;max-height:100px;"><ul class="select2-choices-dolibarr">'.implode(' ', $toprint).'</ul></div>';
 			} else {
 				dol_syslog(get_class($this).'::showOutputField error '.$this->db->lasterror(), LOG_WARNING);
 			}
