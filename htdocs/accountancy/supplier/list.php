@@ -624,11 +624,28 @@ if ($result) {
 		}
 		//var_dump($return);
 
+		/* ************************** SPÉ VET COMPANY { ************************** */
+		$parameters = array('objp' => &$objp);
+		$reshook=$hookmanager->executeHooks('selectlineaccountancycode',$parameters);    // Note that $action and $object may have been modified by hook
+		/* ************************** SPÉ VET COMPANY } ************************** */
+
 		if (!empty($code_buy_p)) {
 			// Value was defined previously
+
+			/* ************************** SPÉ VET COMPANY { ************************** */
+			// [FM] je ne récupère pas ce bout-là, je pense que c’est géré en standard,
+			// mais je le laisse en commentaire car c'est difficile d'en avoir la certitude
+			// $objp->code_buy_p = $objp->code_buy;       // Code on product
+			/* ************************** SPÉ VET COMPANY } ************************** */
 		} else {
+			/* ************************** SPÉ VET COMPANY { ************************** */
+			if (empty($cat_code))
+				/* ************************** SPÉ VET COMPANY } ************************** */
 			$code_buy_p_notset = 'color:orange';
 		}
+		/* ************************** SPÉ VET COMPANY { ************************** */
+		if (empty($cat_code))
+			/* ************************** SPÉ VET COMPANY } ************************** */
 		if (empty($code_buy_l) && empty($code_buy_p)) {
 			$code_buy_p_notset = 'color:red';
 		}
@@ -725,21 +742,26 @@ if ($result) {
 		$s .= ($code_buy_l > 0 ? length_accountg($code_buy_l) : '<span style="'.$code_buy_p_notset.'">'.$langs->trans("NotDefined").'</span>');
 		print $form->textwithpicto($s, $shelp, 1, $ttype, '', 0, 2, '', 1);
 		if ($product_static->id > 0) {
-			print '<br>';
-			$s = '2. '.(($facturefourn_static_det->product_type == 1) ? $langs->trans("ThisService") : $langs->trans("ThisProduct")).': ';
-			$shelp = ''; $ttype = 'help';
-			if ($suggestedaccountingaccountfor == 'eec') {
-				$shelp = $langs->trans("SaleEEC");
-			} elseif ($suggestedaccountingaccountfor == 'eecwithvat') {
-				$shelp = $langs->trans("SaleEECWithVAT");
-			} elseif ($suggestedaccountingaccountfor == 'eecwithoutvatnumber') {
-				$shelp = $langs->trans("SaleEECWithoutVATNumber");
-				$ttype = 'warning';
-			} elseif ($suggestedaccountingaccountfor == 'export') {
-				$shelp = $langs->trans("SaleExport");
+			/* ************************** SPÉ VET COMPANY { ************************** */
+			if (!empty($cat_code) && $cat_code > 0) {
+				/* ************************** SPÉ VET COMPANY } ************************** */
+				print '<br>';
+				$s = '2. ' . (($facturefourn_static_det->product_type == 1) ? $langs->trans("ThisService") : $langs->trans("ThisProduct")) . ': ';
+				$shelp = '';
+				$ttype = 'help';
+				if ($suggestedaccountingaccountfor == 'eec') {
+					$shelp = $langs->trans("SaleEEC");
+				} elseif ($suggestedaccountingaccountfor == 'eecwithvat') {
+					$shelp = $langs->trans("SaleEECWithVAT");
+				} elseif ($suggestedaccountingaccountfor == 'eecwithoutvatnumber') {
+					$shelp = $langs->trans("SaleEECWithoutVATNumber");
+					$ttype = 'warning';
+				} elseif ($suggestedaccountingaccountfor == 'export') {
+					$shelp = $langs->trans("SaleExport");
+				}
+				$s .= (empty($code_buy_p) ? '<span style="' . $code_buy_p_notset . '">' . $langs->trans("NotDefined") . '</span>' : length_accountg($code_buy_p));
+				print $form->textwithpicto($s, $shelp, 1, $ttype, '', 0, 2, '', 1);
 			}
-			$s .= (empty($code_buy_p) ? '<span style="'.$code_buy_p_notset.'">'.$langs->trans("NotDefined").'</span>' : length_accountg($code_buy_p));
-			print $form->textwithpicto($s, $shelp, 1, $ttype, '', 0, 2, '', 1);
 		} else {
 			print '<br>';
 			$s = '2. '.(($objp->type_l == 1) ? $langs->trans("ThisService") : $langs->trans("ThisProduct")).': ';

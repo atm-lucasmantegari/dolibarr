@@ -1,4 +1,10 @@
 <?php
+
+/* ************************ SPÉ VET COMPANY { ************************ */
+set_time_limit(0);
+ini_set('memory_limit', '2048M'); // Ticket ATM DA022421
+/* ************************ SPÉ VET COMPANY } ************************ */
+
 /* Copyright (C) 2013-2014	Olivier Geffroy		<jeff@jeffinfo.com>
  * Copyright (C) 2013-2021	Alexandre Spangaro	<aspangaro@open-dsi.fr>
  * Copyright (C) 2014-2015	Ari Elbaz (elarifr)	<github@accedinfo.com>
@@ -37,6 +43,11 @@ require_once DOL_DOCUMENT_ROOT.'/accountancy/class/accountingaccount.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/accounting.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
+
+/* ************************ SPÉ VET COMPANY { ************************ */
+if (!empty($conf->global->CATEGORIE_USE_ACCOUNTANCY_CODES)) require_once DOL_DOCUMENT_ROOT.'/core/lib/categories.lib.php';
+$langs->loadLangs(array('categories'));
+/* ************************ SPÉ VET COMPANY } ************************ */
 
 // Load translation files required by the page
 $langs->loadLangs(array("bills", "companies", "compta", "accountancy", "other", "productbatch", "products"));
@@ -99,6 +110,12 @@ $hookmanager->initHooks(array('accountancycustomerlist'));
 
 $formaccounting = new FormAccounting($db);
 $accountingAccount = new AccountingAccount($db);
+
+/* ************************ SPÉ VET COMPANY { ************************ */
+$accounting = new AccountingAccount($db);
+$aarowid_s = $accounting->fetch('', $conf->global->ACCOUNTING_SERVICE_SOLD_ACCOUNT, 1);
+$aarowid_p = $accounting->fetch('', $conf->global->ACCOUNTING_PRODUCT_SOLD_ACCOUNT, 1);
+/* ************************ SPÉ VET COMPANY } ************************ */
 
 $chartaccountcode = dol_getIdFromCode($db, $conf->global->CHARTOFACCOUNTS, 'accounting_system', 'rowid', 'pcg_version');
 
@@ -611,10 +628,46 @@ if ($result) {
 		}
 		//var_dump($return);
 
+		/* ************************ SPÉ VET COMPANY { ************************ */
+		// TODO: à intégrer dans le cœur
+		$parameters = array('objp' => &$objp);
+		$reshook=$hookmanager->executeHooks('selectlineaccountancycode',$parameters);    // Note that $action and $object may have been modified by hook
+
+		if (!empty($conf->global->CATEGORIE_USE_ACCOUNTANCY_CODES))
+		{
+			if (empty($objp->code_sell))
+			{
+				// get account from categories of the product
+				list($cat_code, $cat_label) = getCategoryAccountancyCode($objp->product_id, 'product');
+				if (!empty($cat_code))
+				{
+					if ($cat_code < 0) $cat_label = '';
+					else
+					{
+						$objp->aarowid_suggest = $accounting->fetch('', $cat_code, 1);
+						$objp->aarowid = $objp->aarowid_suggest;
+					}
+				}
+			}
+		}
+
+		if (! empty($objp->code_sell)) {
+			$objp->code_sell_p = $objp->code_sell;       // Code on product
+		} else {
+			if (empty($cat_code)) $code_sell_p_notset = 'color:orange';
+		}
+		if (empty($objp->code_sell_l) && empty($objp->code_sell_p) && empty($cat_code)) $code_sell_p_notset = 'color:red';
+		/* ************************ SPÉ VET COMPANY } ************************ */
+
+
 		if (!empty($code_sell_p)) {
 			// Value was defined previously
 		} else {
-			$code_sell_p_notset = 'color:orange';
+			/* ************************ SPÉ VET COMPANY { ************************ */
+			// l’ajout par rapport à la 13.0 standard est le test sur `empty($cat_code)`
+			if (empty($cat_code) && empty($objp->code_sell_l) && empty($objp->code_sell_p)) $code_sell_p_notset = 'color:red';
+			if (empty($cat_code) && $suggestedaccountingaccountfor == 'eecwithoutvatnumber' && empty($code_sell_p_notset)) $code_sell_p_notset = 'color:orange';
+			/* ************************ SPÉ VET COMPANY } ************************ */
 		}
 		if (empty($code_sell_l) && empty($code_sell_p)) {
 			$code_sell_p_notset = 'color:red';
@@ -721,6 +774,15 @@ if ($result) {
 		print $form->textwithpicto($s, $shelp, 1, $ttype, '', 0, 2, '', 1);
 		// Now show account for product
 		if ($product_static->id > 0) {
+			/* ************************ SPÉ VET COMPANY { ************************ */
+			// C’est du spécifique VET, c’est sûr, mais la section de code
+			// dans laquelle il était a complètement changé, donc aucune garantie que ça marche encore.
+			if (!empty($cat_code) && $cat_code > 0)
+			{
+				print '<br>';
+				print (($objp->type_l == 1)?$langs->trans("DefaultForServiceCategorie", $cat_label):$langs->trans("DefaultForProductCategorie", $cat_label)) . ' = ' . ($cat_code > 0 ? length_accountg($cat_code) : $langs->trans("Unknown"));
+			}
+			/* ************************ SPÉ VET COMPANY } ************************ */
 			print '<br>';
 			$s = '2. '.(($facture_static_det->product_type == 1) ? $langs->trans("ThisService") : $langs->trans("ThisProduct")).': ';
 			$shelp = ''; $ttype = 'help';
