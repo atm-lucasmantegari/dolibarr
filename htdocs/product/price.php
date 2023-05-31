@@ -1581,6 +1581,7 @@ if ($action == 'edit_price' && $object->getRights()->creer) {
 			print '</td>';
 
 			// VAT
+			// a la création il ne créer pas les deux autres tva
 			if (empty($conf->global->PRODUIT_MULTIPRICES_USE_VAT_PER_LEVEL)) {
 				print '<td>';
 				print '<input type="hidden" name="tva_tx['.$i.']" value="'.($object->default_vat_code ? $object->tva_tx.' ('.$object->default_vat_code.')' : $object->tva_tx).'">';

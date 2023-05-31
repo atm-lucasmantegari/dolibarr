@@ -576,6 +576,10 @@ if (!empty($id) || !empty($ref)) {
 						});
 					});
 				});
+
+				/* ************************* SPÉ VET COMPANY { *********************** */
+				jQuery('select[name=value]').select2();
+				/* ************************* SPÉ VET COMPANY } *********************** */
 			});
 		</script>
 

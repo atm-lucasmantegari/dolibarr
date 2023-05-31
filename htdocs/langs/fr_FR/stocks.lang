@@ -317,3 +317,8 @@ StockTransferRightRead=Lire les transferts de stocks
 StockTransferRightCreateUpdate=Créer/Mettre à jour les transferts de stocks
 StockTransferRightDelete=Supprimer les transferts de stocks
 BatchNotFound=Lot/série introuvable pour ce produit
+
+############################# SPÉ VET COMPANY {
+AllowAddLimitStockByWarehouseByPeriod=La limite par produit et par entrepôt est liée à une période de l'année
+ProductStockWarehouse=Limite de stock pour alerte et stock désiré optimal par produit et par entrepôt
+############################# SPÉ VET COMPANY }

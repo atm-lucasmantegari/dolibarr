@@ -126,6 +126,9 @@ $search_billed = GETPOST('search_billed', 'int');
 $search_project_ref = GETPOST('search_project_ref', 'alpha');
 $search_btn = GETPOST('button_search', 'alpha');
 $search_remove_btn = GETPOST('button_removefilter', 'alpha');
+/* *********************** SPÉ VET COMPANY { *********************** */
+$ref_supplier = GETPOST('refsupplier', 'alpha');
+/* *********************** SPÉ VET COMPANY } *********************** */
 
 if (GETPOSTISARRAY('search_status')) {
 	$search_status = join(',', GETPOST('search_status', 'array:intcomma'));
@@ -400,6 +403,15 @@ if (empty($reshook)) {
 				$objecttmp->origin    = 'order_supplier';
 				$objecttmp->origin_id = $id_order;
 
+
+				/**************************** SPE VECOMPANY PART 1/3 **************************/
+				/** Fait dans le coeur car les autres solutions étaient
+				 * jugées trop chronophages et ne garantissaient pas le fonctionnement final
+				 */
+				if (!isset($provIncrement)) {$provIncrement = 0;}else {$provIncrement++;}
+				$objecttmp->ref_supplier = '(PROV'.date('ymd-His').($provIncrement?'-'.$provIncrement:'').')';
+				/**************************** FIN SPE VECOMPANY PART 1/3 **************************/
+
 				$res = $objecttmp->create($user);
 
 				if ($res > 0) {
@@ -407,6 +419,13 @@ if (empty($reshook)) {
 					$lastref = $objecttmp->ref;
 					$lastid = $objecttmp->id;
 				}
+				/* *********************** SPÉ VET COMPANY { *********************** */
+				else {
+					setEventMessage($objecttmp->error, 'errors');
+					break;
+				}
+				/* *********************** SPÉ VET COMPANY } *********************** */
+
 			}
 
 			if ($objecttmp->id > 0) {
@@ -435,6 +454,21 @@ if (empty($reshook)) {
 
 					$fk_parent_line = 0;
 					$num = count($lines);
+
+					/**************************** SPE VECOMPANY PART 2/3 **************************/
+					/** Fait dans le coeur car les autres solutions étaient
+					 * jugées trop chronophages et ne garantissaient pas le fonctionnement final
+					 */
+					if ($conf->subtotal->enabled && ! class_exists('TSubtotal')) {
+						dol_include_once('/subtotal/class/subtotal.class.php');
+					}
+
+					if ($conf->subtotal->enabled && class_exists('TSubtotal')) {
+						$subtotal = new TSubtotal();
+						$subtotal->addTitle($objecttmp, $langs->trans('Order'). ' : ' . $cmd->ref, 0);
+					}
+
+					/**************************** FIN SPE VECOMPANY PART 2/3 **************************/
 
 					for ($i = 0; $i < $num; $i++) {
 						$desc = ($lines[$i]->desc ? $lines[$i]->desc : $lines[$i]->libelle);
@@ -501,11 +535,15 @@ if (empty($reshook)) {
 								$lines[$i]->info_bits,
 								'HT',
 								$product_type,
-								$lines[$i]->rang,
+								/* *********************** SPÉ VET COMPANY { *********************** */
+								-1,
+								/* *********************** SPÉ VET COMPANY } *********************** */
 								false,
 								$lines[$i]->array_options,
 								$lines[$i]->fk_unit,
-								$objecttmp->origin_id,
+								/* *********************** SPÉ VET COMPANY { *********************** */
+								$id_order,
+								/* *********************** SPÉ VET COMPANY } *********************** */
 								$lines[$i]->pa_ht,
 								$lines[$i]->ref_supplier,
 								$lines[$i]->special_code,
@@ -524,6 +562,11 @@ if (empty($reshook)) {
 							}
 						}
 					}
+					/**************************** SPE VECOMPANY PART 3/3 **************************/
+					if ($conf->subtotal->enabled && class_exists('TSubtotal')) {
+						$subtotal->addTotal($objecttmp, $langs->trans('Total'). ' : ' . $cmd->ref, 0);
+					}
+					/**************************** FIN SPE VECOMPANY PART 3/3  **************************/
 				}
 			}
 
@@ -697,6 +740,9 @@ if (empty($reshook)) {
 			if ($optioncss != '') {
 				$param .= '&optioncss='.urlencode($optioncss);
 			}
+			/* *********************** SPÉ VET COMPANY { *********************** */
+			if ($search_billed != '') $param .= "&search_billed=".urlencode($search_billed);
+			/* *********************** SPÉ VET COMPANY } *********************** */
 			if ($billed != '') {
 				$param .= '&billed='.urlencode($billed);
 			}
@@ -1241,6 +1287,23 @@ if ($resql) {
 		print '</td>';
 		print '</tr>';
 		print '</table>';
+
+		/* *********************** SPÉ VET COMPANY { *********************** */
+		if (!empty($conf->use_javascript_ajax)) {
+			?>
+			<script>
+				$( document ).ready(function () {
+					$('select#createbills_onebythird').on('change', function (e) {
+						if ($(this).val() === '1')
+							$('#refsupplier').parent().parent().show();
+						else
+							$('#refsupplier').parent().parent().hide();
+					});
+				});
+			</script>
+			<?php
+		}
+		/* *********************** SPÉ VET COMPANY } *********************** */
 
 		print '<br>';
 		print '<div class="center">';

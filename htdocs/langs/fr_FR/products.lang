@@ -429,3 +429,9 @@ ConfirmEditExtrafield = Sélectionnez l'extrafield que vous souhaitez modifier
 ConfirmEditExtrafieldQuestion = Voulez-vous vraiment modifier cet extrafield ?
 ModifyValueExtrafields = Modifier la valeur d'un extrafield
 OrProductsWithCategories=Ou des produits avec des tags/catégories
+
+############################# SPÉ VET COMPANY {
+HelpCombinationNewReference=Référence de la nouvelle variante. Si le champ est laissé vide, la référence du produit d’origine sera utilisée et suffixée en fonction des attributs choisis.
+CombinationsSeparator=Séparateur utilisé pour générer les références des nouvelles variantes de produits.
+Recurring=Récurrent
+############################# SPÉ VET COMPANY }

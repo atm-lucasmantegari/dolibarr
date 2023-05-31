@@ -835,6 +835,18 @@ if (empty($reshook)) {
 					$error++;
 				}
 
+				/* *********************** SPÉ VET COMPANY { *********************** */
+				// DEBUG ADDED BY SPLASH SYNC
+//                var_dump(array(
+//                    'POSTED', GETPOST('options_tosell_fr', 'alpha'),
+//                    "PARSED", $object->array_options["options_tosell_fr"]
+//                ));
+				// TEMP FIX BY SPLASH
+				$object->array_options["options_tosell_fr"] = GETPOST('options_tosell_fr', 'alpha');
+				$object->array_options["options_tosell_nl"] = GETPOST('options_tosell_nl', 'alpha');
+				$object->array_options["options_tosell_pny"] = GETPOST('options_tosell_pny', 'alpha');
+				/* *********************** SPÉ VET COMPANY } *********************** */
+
 				if (!$error && $object->check()) {
 					if ($object->update($object->id, $user) > 0) {
 						// Category association
