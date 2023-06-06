@@ -36,7 +36,6 @@ create table llx_categorie
     fk_user_creat	integer,							-- user making creation
     fk_user_modif	integer,							-- user making last change
     -- ************** SPÉ VET COMPANY { **************
-    visible         tinyint DEFAULT 1 NOT NULL,
     accountancy_code_sell           varchar(32),
     accountancy_code_sell_intra     varchar(32),
     accountancy_code_sell_export    varchar(32),
