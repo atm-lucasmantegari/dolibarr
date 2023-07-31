@@ -689,7 +689,7 @@ if ($search_ref || $search_label || $sall || $salert || $draftorder || GETPOST('
 		$filters .= '&fk_entrepot='.urlencode($fk_entrepot);
 	}
 	/* *********************** SPÉ VET COMPANY { *********************** */
-	if ($multiwarehouse) $filters .= '&multiwarehouse[]='.implode('&multiwarehouse[]=', $multiwarehouse);z
+	if ($multiwarehouse) $filters .= '&multiwarehouse[]='.implode('&multiwarehouse[]=', $multiwarehouse);
 	/* *********************** SPÉ VET COMPANY } *********************** */
 
 }
