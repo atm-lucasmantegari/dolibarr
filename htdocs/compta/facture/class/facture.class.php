@@ -1164,6 +1164,7 @@ class Facture extends CommonInvoice
 
 		$facture->origin            = $this->origin;
 		$facture->origin_id         = $this->origin_id;
+		$facture->fk_account         = $this->fk_account;
 
 		$facture->lines = $this->lines; // Array of lines of invoice
 		$facture->situation_counter = $this->situation_counter;
@@ -3558,6 +3559,7 @@ class Facture extends CommonInvoice
 
 	/**
 	 *  Add an invoice line into database (linked to product/service or not).
+	 *  Note: ->thirdparty must be defined.
 	 *  Les parametres sont deja cense etre juste et avec valeurs finales a l'appel
 	 *  de cette methode. Aussi, pour le taux tva, il doit deja avoir ete defini
 	 *  par l'appelant par la methode get_default_tva(societe_vendeuse,societe_acheteuse,produit)
@@ -4082,7 +4084,7 @@ class Facture extends CommonInvoice
 				}
 
 				// Mise a jour info denormalisees au niveau facture
-				$this->update_price(1);
+				$this->update_price(1, 'auto');
 				$this->db->commit();
 				return $result;
 			} else {

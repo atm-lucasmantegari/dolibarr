@@ -176,7 +176,7 @@ function invoice_admin_prepare_head()
 	$head[$h][2] = 'attributeslinesrec';
 	$h++;
 
-	if ($conf->global->INVOICE_USE_SITUATION) {	// Warning, implementation is seriously bugged and a new one not compatible is expected to become stable
+	if (getDolGlobalInt('INVOICE_USE_SITUATION')) {	// Warning, implementation is seriously bugged and a new one not compatible is expected to become stable
 		$head[$h][0] = DOL_URL_ROOT.'/admin/facture_situation.php';
 		$head[$h][1] = $langs->trans("InvoiceSituation");
 		$head[$h][2] = 'situation';
@@ -281,13 +281,16 @@ function getNumberInvoicesPieChart($mode)
 		$sql .= ", sum(".$db->ifsql("f.date_lim_reglement > '".date_format($datenowadd15, 'Y-m-d')."'", 1, 0).") as nbnotlate15";
 		$sql .= ", sum(".$db->ifsql("f.date_lim_reglement > '".date_format($datenowadd30, 'Y-m-d')."'", 1, 0).") as nbnotlate30";
 		if ($mode == 'customers') {
+			$element = 'invoice';
 			$sql .= " FROM ".MAIN_DB_PREFIX."facture as f";
 		} elseif ($mode == 'fourn' || $mode == 'suppliers') {
+			$element = 'supplier_invoice';
 			$sql .= " FROM ".MAIN_DB_PREFIX."facture_fourn as f";
 		} else {
 			return '';
 		}
-		$sql .= " WHERE f.type <> 2";
+		$sql .= " WHERE f.entity IN (".getEntity($element).")";
+		$sql .= " AND f.type <> 2";
 		$sql .= " AND f.fk_statut = 1";
 		if (isset($user->socid) && $user->socid > 0) {
 			$sql .= " AND f.fk_soc = ".((int) $user->socid);

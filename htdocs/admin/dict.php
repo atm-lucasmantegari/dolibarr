@@ -512,7 +512,7 @@ $tabcond[25] = !empty($conf->website->enabled);
 $tabcond[27] = !empty($conf->societe->enabled);
 $tabcond[28] = !empty($conf->holiday->enabled);
 $tabcond[29] = !empty($conf->project->enabled);
-$tabcond[30] = !empty($conf->label->enabled);
+$tabcond[30] = (isModEnabled('label') || isModEnabled('barcode') || isModEnabled('adherent'));	// stickers format dictionary
 //$tabcond[31]= !empty($conf->accounting->enabled);
 $tabcond[32] = (!empty($conf->holiday->enabled) || !empty($conf->hrm->enabled));
 $tabcond[33] = !empty($conf->hrm->enabled);
@@ -1250,6 +1250,8 @@ if ($id > 0) {
 		$sql .= natural_search("f.code", $search_code);
 	} elseif ($search_code != '' && $id == 2) {
 		$sql .= natural_search("d.code_departement", $search_code);
+	} elseif ($search_code != '' && $id == 14) {
+		$sql .= natural_search("e.code", $search_code);
 	} elseif ($search_code != '' && $id != 9) {
 		$sql .= natural_search("code", $search_code);
 	}
