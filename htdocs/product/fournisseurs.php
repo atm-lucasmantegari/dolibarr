@@ -536,7 +536,8 @@ if ($id > 0 || $ref) {
 								rate_options = $.parseHTML(data.value)
 								rate_options.forEach(opt => {
 									if (opt.selected) {
-										replaceVATWithSupplierValue(opt.value)
+                                       //SPE BLUEHORSE : suppression de l\'autocompletion du taux de tva lors de la création d\'un prix d\'achat
+//										replaceVATWithSupplierValue(opt.value)
 										return
 									}
 								})
