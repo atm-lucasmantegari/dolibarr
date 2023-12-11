@@ -1798,6 +1798,8 @@ if ($resql) {
 				$multicurrency_totalpay = price2num($facturestatic->multicurrency_total_ttc - $multicurrency_remaintopay);
 			}
 
+            if($facturestatic->paye) $remaintopay = 0;
+
 			$facturestatic->alreadypaid = $paiement;
 
 			$marginInfo = array();
