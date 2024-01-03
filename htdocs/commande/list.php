@@ -159,6 +159,10 @@ $fieldstosearchall = array(
 if (empty($user->socid)) {
 	$fieldstosearchall["c.note_private"] = "NotePrivate";
 }
+/**
+ * SPE MAINTLOG
+ * PR COEUR FAITE EN V20
+ */
 if(getDolGlobalInt(strtoupper($object->table_element).'_SEARCHALL_EXTRAFIELDS_ENABLE') > 0) {
 	if(!empty($extrafields->attributes[$object->table_element]['type'])) {
 		foreach($extrafields->attributes[$object->table_element]['type'] as $key => $type) {
@@ -179,6 +183,9 @@ if(getDolGlobalInt(strtoupper($object->table_element_line).'_SEARCHALL_EXTRAFIEL
 		}
 	}
 }
+/**
+ * FIN SPE MAINTLOG
+ */
 
 $checkedtypetiers = 0;
 $arrayfields = array(
@@ -477,9 +484,16 @@ if (is_array($extrafields->attributes[$object->table_element]['label']) && count
 if ($sall || $search_product_category > 0) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as pd ON c.rowid=pd.fk_commande';
 }
+/**
+ * SPE MAINTLOG
+ * PR COEUR FAITE EN V20
+ */
 if($sall && getDolGlobalInt(strtoupper($object->table_element_line).'_SEARCHALL_EXTRAFIELDS_ENABLE') > 0) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet_extrafields as efcd ON pd.rowid=efcd.fk_object';
 }
+/**
+ * FIN SPE
+ */
 if ($search_product_category > 0) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp ON cp.fk_product=pd.fk_product';
 }
