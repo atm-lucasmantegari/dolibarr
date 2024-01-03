@@ -1,5 +1,7 @@
 # CHANGELOG 14.0 MAINTLOG FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+* 03/01/24 *
+- NEW : Sur les commandes pouvoir utiliser la recherche globale sur les extrafields commandes + lignes (COMMANDE_SEARCHALL_EXTRAFIELDS_ENABLE + COMMANDEDET_SEARCHALL_EXTRAFIELDS_ENABLE)
 
 * 19/09/23 *
 - FIX : mauvais affichage du reste a payer lors d'une déduction d'un avoir sur une facture fournisseur
