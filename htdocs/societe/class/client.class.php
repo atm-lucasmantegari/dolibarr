@@ -52,25 +52,31 @@ class Client extends Societe
 	/**
 	 *  Load indicators into this->nb for board
 	 *
-	 *  @return     int         <0 if KO, >0 if OK
+	 *  @return     int         Return integer <0 if KO, >0 if OK
 	 */
 	public function load_state_board()
 	{
 		// phpcs:enable
-		global $user;
+		global $user, $hookmanager;
 
 		$this->nb = array("prospects" => 0, "customers" => 0);
 		$clause = "WHERE";
 
 		$sql = "SELECT count(s.rowid) as nb, s.client";
 		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
-		if (!$user->rights->societe->client->voir && !$user->socid) {
+		if (!$user->hasRight('societe', 'client', 'voir') && !$user->socid) {
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
 			$sql .= " WHERE sc.fk_user = ".((int) $user->id);
 			$clause = "AND";
 		}
 		$sql .= " ".$clause." s.client IN (1,2,3)";
 		$sql .= ' AND s.entity IN ('.getEntity($this->element).')';
+		// Add where from hooks
+		if (is_object($hookmanager)) {
+			$parameters = array();
+			$reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters, $this); // Note that $action and $object may have been modified by hook
+			$sql .= $hookmanager->resPrint;
+		}
 		$sql .= " GROUP BY s.client";
 
 		$resql = $this->db->query($sql);
@@ -96,16 +102,19 @@ class Client extends Societe
 	 *  Load array of prospect status
 	 *
 	 *  @param	int		$active     1=Active only, 0=Not active only, -1=All
-	 *  @return int					<0 if KO, >0 if OK
+	 *  @return int					Return integer <0 if KO, >0 if OK
 	 */
 	public function loadCacheOfProspStatus($active = 1)
 	{
 		global $langs;
 
-		$sql = "SELECT id, code, libelle as label, picto FROM ".MAIN_DB_PREFIX."c_stcomm";
+		$sql = "SELECT id, code, libelle as label, picto, sortorder";
+		$sql .= " FROM ".MAIN_DB_PREFIX."c_stcomm";
 		if ($active >= 0) {
 			$sql .= " WHERE active = ".((int) $active);
 		}
+		$sql .= $this->db->order('sortorder,id', 'ASC,ASC');
+
 		$resql = $this->db->query($sql);
 		$num = $this->db->num_rows($resql);
 		$i = 0;

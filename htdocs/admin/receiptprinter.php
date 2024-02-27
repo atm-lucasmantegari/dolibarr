@@ -24,6 +24,7 @@
  *      \brief      Page to setup receipt printer
  */
 
+// Load Dolibarr environment
 require '../main.inc.php';
 
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
@@ -45,7 +46,7 @@ $printername = GETPOST('printername', 'alpha');
 $printerid = GETPOST('printerid', 'int');
 $parameter = GETPOST('parameter', 'alpha');
 
-$template = GETPOST('template', 'nohtml');
+$template = GETPOST('template', 'alphanohtml');
 $templatename = GETPOST('templatename', 'alpha');
 $templateid = GETPOST('templateid', 'int');
 
@@ -172,6 +173,25 @@ if ($action == 'testprinter' && $user->admin) {
 	$action = '';
 }
 
+if ($action == 'testprinter2' && $user->admin) {
+	$error = 0;
+	if (empty($printerid)) {
+		$error++;
+		setEventMessages($langs->trans("PrinterIdEmpty"), null, 'errors');
+	}
+
+	if (!$error) {
+		// test
+		$ret = $printer->sendTestToPrinter($printerid, 1);
+		if ($ret == 0) {
+			setEventMessages($langs->trans("TestSentToPrinter", $printername), null);
+		} else {
+			setEventMessages($printer->error, $printer->errors, 'errors');
+		}
+	}
+	$action = '';
+}
+
 if ($action == 'testtemplate' && $user->admin) {
 	$error = 0;
 	// if (empty($printerid)) {
@@ -183,8 +203,8 @@ if ($action == 'testtemplate' && $user->admin) {
 	// test
 	require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 	$object = new Facture($db);
-	//$object->initAsSpecimen();
-	$object->fetch(18);
+	$object->initAsSpecimen();
+	//$object->fetch(18);
 	//var_dump($object->lines);
 	$ret = $printer->sendToPrinter($object, $templateid, 1);
 	if ($ret == 0) {
@@ -298,16 +318,28 @@ if ($mode == 'config' && $user->admin) {
 
 	print dol_get_fiche_head($head, $mode, $langs->trans("ModuleSetup"), -1, 'technic');
 
-	print '<span class="opacitymedium">'.$langs->trans("ReceiptPrinterDesc")."</span><br><br>\n";
+	//print info_admin($langs->trans("ThisFeatureIsForESCPOSPrintersOnly"));
 
+	print load_fiche_titre($langs->trans("ReceiptPrinterDesc"), '', '')."\n";
+
+	print '<div class="div-table-responsive">'; // You can use div-table-responsive-no-min if you don't need reserved height for your table
 	print '<table class="noborder centpercent">'."\n";
 	print '<tr class="liste_titre">';
 	print '<th>'.$langs->trans("Name").'</th>';
 	print '<th>'.$langs->trans("Type").'</th>';
-	print '<th>'.$langs->trans("Profile").'</th>';
+	print '<th>';
+	$htmltext = $langs->trans("PROFILE_DEFAULT").' = '.$langs->trans("PROFILE_DEFAULT_HELP").'<br>';
+	$htmltext .= $langs->trans("PROFILE_SIMPLE").' = '.$langs->trans("PROFILE_SIMPLE_HELP").'<br>';
+	$htmltext .= $langs->trans("PROFILE_EPOSTEP").' = '.$langs->trans("PROFILE_EPOSTEP_HELP").'<br>';
+	$htmltext .= $langs->trans("PROFILE_P822D").' = '.$langs->trans("PROFILE_P822D_HELP").'<br>';
+	$htmltext .= $langs->trans("PROFILE_STAR").' = '.$langs->trans("PROFILE_STAR_HELP").'<br>';
+
+	print $form->textwithpicto($langs->trans("Profile"), $htmltext);
+	print '</th>';
 	print '<th>'.$langs->trans("Parameters").'</th>';
 	print '<th></th>';
 	print "</tr>\n";
+
 	$ret = $printer->listprinters();
 	$nbofprinters = count($printer->listprinters);
 
@@ -341,7 +373,7 @@ if ($mode == 'config' && $user->admin) {
 				print '<td>'.$printer->profileresprint.'</td>';
 				print '<td><input size="60" type="text" name="parameter" value="'.$printer->listprinters[$line]['parameter'].'"></td>';
 				print '<td>';
-				print '<div class="center"><input type="submit" class="button button-save" value="'.dol_escape_htmltag($langs->trans("Save")).'"></div>';
+				print $form->buttonsSaveCancel("Save", '');
 				print '</td>';
 				print '</tr>';
 			} else {
@@ -350,23 +382,30 @@ if ($mode == 'config' && $user->admin) {
 				print '<td>'.$langs->trans($printer->listprinters[$line]['fk_profile_name']).'</td>';
 				print '<td>'.$printer->listprinters[$line]['parameter'].'</td>';
 				// edit icon
-				print '<td class="right"><a class="editfielda marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=config&amp;action=editprinter&amp;printerid='.$printer->listprinters[$line]['rowid'].'">';
-				print img_picto($langs->trans("Edit"), 'edit');
+				print '<td class="center">';
+				print '<a class="editfielda marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=config&action=editprinter&token='.newToken().'&printerid='.$printer->listprinters[$line]['rowid'].'">';
+				print img_picto($langs->trans("Edit"), 'edit', 'class="paddingright"');
 				print '</a>';
 				// delete icon
-				print '<a class="marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=config&amp;action=deleteprinter&amp;token='.newToken().'&amp;printerid='.$printer->listprinters[$line]['rowid'].'&amp;printername='.$printer->listprinters[$line]['name'].'">';
-				print img_picto($langs->trans("Delete"), 'delete');
+				print '<a class="marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=config&action=deleteprinter&token='.newToken().'&printerid='.$printer->listprinters[$line]['rowid'].'&printername='.urlencode($printer->listprinters[$line]['name']).'">';
+				print img_picto($langs->trans("Delete"), 'delete', 'class="paddingright"');
 				print '</a>';
 				// test icon
-				print '<a class="marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=config&amp;action=testprinter&amp;token='.newToken().'&amp;printerid='.$printer->listprinters[$line]['rowid'].'&amp;printername='.$printer->listprinters[$line]['name'].'">';
-				print img_picto($langs->trans("TestPrinter"), 'printer');
-				print '</a></td>';
+				print '<a class="marginrightonly nowraponall" href="'.$_SERVER['PHP_SELF'].'?mode=config&action=testprinter&token='.newToken().'&printerid='.$printer->listprinters[$line]['rowid'].'&printername='.urlencode($printer->listprinters[$line]['name']).'">';
+				print img_picto($langs->trans("TestPrinterDesc"), 'printer', 'class="paddingright paddingleft"').'TXT';
+				print '</a>';
+				// test icon
+				print '<a class="marginrightonly nowraponall" href="'.$_SERVER['PHP_SELF'].'?mode=config&action=testprinter2&token='.newToken().'&printerid='.$printer->listprinters[$line]['rowid'].'&printername='.urlencode($printer->listprinters[$line]['name']).'">';
+				print img_picto($langs->trans("TestPrinterDesc2"), 'printer', 'class="paddingright paddingleft"').'IMG';
+				print '</a>';
+				print '</td>';
 				print '</tr>';
 			}
 		}
 	}
 
 	print '</table>';
+	print '</div>';
 
 	print dol_get_fiche_end();
 
@@ -375,33 +414,28 @@ if ($mode == 'config' && $user->admin) {
 	print '<br>';
 
 
-	print load_fiche_titre($langs->trans("ReceiptPrinterTypeDesc"), '', '')."\n";
+	print '<span class="opacitymedium">'.$langs->trans("ReceiptPrinterTypeDesc").'...</span><br><br>'."\n";
 
+	print '<div class="div-table-responsive">'; // You can use div-table-responsive-no-min if you don't need reserved height for your table
 	print '<table class="noborder centpercent">'."\n";
-	print '<tr class="oddeven"><td>'.$langs->trans("CONNECTOR_DUMMY").':</td><td>'.$langs->trans("CONNECTOR_DUMMY_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("CONNECTOR_NETWORK_PRINT").':</td><td>'.$langs->trans("CONNECTOR_NETWORK_PRINT_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("CONNECTOR_FILE_PRINT").':</td><td>'.$langs->trans("CONNECTOR_FILE_PRINT_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("CONNECTOR_WINDOWS_PRINT").':</td><td>'.$langs->trans("CONNECTOR_WINDOWS_PRINT_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("CONNECTOR_CUPS_PRINT").':</td><td>'.$langs->trans("CONNECTOR_CUPS_PRINT_HELP").'</td></tr>';
+	print '<tr class="oddeven"><td>'.$langs->trans("CONNECTOR_DUMMY").'</td><td>'.$langs->trans("CONNECTOR_DUMMY_HELP").'</td></tr>';
+	print '<tr class="oddeven"><td>'.$form->textwithpicto($langs->trans("CONNECTOR_NETWORK_PRINT"), $langs->trans("FromServerPointOfView")).'</td><td>'.$langs->trans("CONNECTOR_NETWORK_PRINT_HELP").'</td></tr>';
+	print '<tr class="oddeven"><td>'.$form->textwithpicto($langs->trans("CONNECTOR_FILE_PRINT"), $langs->trans("FromServerPointOfView")).'</td><td>'.$langs->trans("CONNECTOR_FILE_PRINT_HELP").'</td></tr>';
+	print '<tr class="oddeven"><td>'.$form->textwithpicto($langs->trans("CONNECTOR_WINDOWS_PRINT"), $langs->trans("FromServerPointOfView")).'</td><td>'.$langs->trans("CONNECTOR_WINDOWS_PRINT_HELP").'</td></tr>';
+	print '<tr class="oddeven"><td>'.$form->textwithpicto($langs->trans("CONNECTOR_CUPS_PRINT"), $langs->trans("FromServerPointOfView")).'</td><td>'.$langs->trans("CONNECTOR_CUPS_PRINT_HELP").'</td></tr>';
 	print '</table>';
+	print '</div>';
 
 	print '<br>';
-
-
-	print load_fiche_titre($langs->trans("ReceiptPrinterProfileDesc"), '', '')."\n";
-
-	print '<table class="noborder centpercent">'."\n";
-	print '<tr class="oddeven"><td>'.$langs->trans("PROFILE_DEFAULT").':</td><td>'.$langs->trans("PROFILE_DEFAULT_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("PROFILE_SIMPLE").':</td><td>'.$langs->trans("PROFILE_SIMPLE_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("PROFILE_EPOSTEP").':</td><td>'.$langs->trans("PROFILE_EPOSTEP_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("PROFILE_P822D").':</td><td>'.$langs->trans("PROFILE_P822D_HELP").'</td></tr>';
-	print '<tr class="oddeven"><td>'.$langs->trans("PROFILE_STAR").':</td><td>'.$langs->trans("PROFILE_STAR_HELP").'</td></tr>';
-	print '</table>';
 }
 
 // mode = template
 if ($mode == 'template' && $user->admin) {
 	print dol_get_fiche_head($head, $mode, $langs->trans("ModuleSetup"), -1, 'technic');
+
+	//print info_admin($langs->trans("ThisFeatureIsForESCPOSPrintersOnly"));
+
+	print '<br>';
 
 	print '<form method="post" action="'.$_SERVER["PHP_SELF"].'?mode=template" autocomplete="off">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -411,6 +445,7 @@ if ($mode == 'template' && $user->admin) {
 		print '<input type="hidden" name="action" value="updatetemplate">';
 	}
 
+	print '<div class="div-table-responsive">'; // You can use div-table-responsive-no-min if you don't need reserved height for your table
 	print '<table class="noborder centpercent">'."\n";
 	print '<tr class="liste_titre">';
 	print '<th>'.$langs->trans("Name").'</th>';
@@ -428,25 +463,25 @@ if ($mode == 'template' && $user->admin) {
 			if ($action == 'edittemplate' && $printer->listprinterstemplates[$line]['rowid'] == $templateid) {
 				print '<input type="hidden" name="templateid" value="'.$printer->listprinterstemplates[$line]['rowid'].'">';
 				print '<td><input type="text" class="minwidth200" name="templatename" value="'.$printer->listprinterstemplates[$line]['name'].'"></td>';
-				print '<td>';
+				print '<td class="wordbreak">';
 				print '<textarea name="template" wrap="soft" cols="120" rows="12">'.$printer->listprinterstemplates[$line]['template'].'</textarea>';
 				print '</td>';
 				print '<td>';
-				print '<div class="center"><input type="submit" class="button button-save" value="'.dol_escape_htmltag($langs->trans("Save")).'"></div>';
+				print $form->buttonsSaveCancel("Save", '');
 				print '</td>';
 			} else {
 				print '<td>'.$printer->listprinterstemplates[$line]['name'].'</td>';
-				print '<td>'.dol_htmlentitiesbr($printer->listprinterstemplates[$line]['template']).'</td>';
+				print '<td class="wordbreak">'.dol_htmlentitiesbr($printer->listprinterstemplates[$line]['template']).'</td>';
 				// edit icon
-				print '<td><a class="editfielda paddingleftonly marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=template&amp;action=edittemplate&amp;templateid='.$printer->listprinterstemplates[$line]['rowid'].'">';
+				print '<td class="center"><a class="editfielda paddingleftonly marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=template&action=edittemplate&token='.newToken().'&templateid='.$printer->listprinterstemplates[$line]['rowid'].'">';
 				print img_picto($langs->trans("Edit"), 'edit');
 				print '</a>';
 				// delete icon
-				print '<a class="paddingleftonly marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=template&amp;action=deletetemplate&amp;templateid='.$printer->listprinterstemplates[$line]['rowid'].'&amp;templatename='.$printer->listprinterstemplates[$line]['name'].'">';
+				print '<a class="paddingleftonly marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=template&action=deletetemplate&token='.newToken().'&templateid='.$printer->listprinterstemplates[$line]['rowid'].'&templatename='.urlencode($printer->listprinterstemplates[$line]['name']).'">';
 				print img_picto($langs->trans("Delete"), 'delete');
 				print '</a>';
 				// test icon
-				print '<a class="paddingleftonly marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=template&amp;action=testtemplate&amp;templateid='.$printer->listprinterstemplates[$line]['rowid'].'&amp;templatename='.$printer->listprinterstemplates[$line]['name'].'">';
+				print '<a class="paddingleftonly marginrightonly" href="'.$_SERVER['PHP_SELF'].'?mode=template&action=testtemplate&token='.newToken().'&templateid='.$printer->listprinterstemplates[$line]['rowid'].'&templatename='.urlencode($printer->listprinterstemplates[$line]['name']).'">';
 				print img_picto($langs->trans("TestPrinterTemplate"), 'printer');
 				print '</a></td>';
 			}
@@ -457,7 +492,7 @@ if ($mode == 'template' && $user->admin) {
 	if ($action != 'edittemplate') {
 		print '<tr>';
 		print '<td><input type="text" class="minwidth200" name="templatename" value="'.$printer->listprinterstemplates[$line]['name'].'"></td>';
-		print '<td>';
+		print '<td class="wordbreak">';
 		print '<textarea name="template" wrap="soft" cols="120" rows="12">';
 		print '</textarea>';
 		print '</td>';
@@ -469,6 +504,7 @@ if ($mode == 'template' && $user->admin) {
 	}
 
 	print '</table>';
+	print '</div>';
 
 	print '</form>';
 
@@ -476,6 +512,7 @@ if ($mode == 'template' && $user->admin) {
 
 	print '<br>';
 
+	print '<div class="div-table-responsive">'; // You can use div-table-responsive-no-min if you don't need reserved height for your table
 	print '<table class="noborder centpercent">'."\n";
 	print '<tr class="liste_titre">';
 	print '<th>'.$langs->trans("Tag").'</th>';
@@ -489,6 +526,7 @@ if ($mode == 'template' && $user->admin) {
 		print '</tr>';
 	}
 	print '</table>';
+	print '</div>';
 }
 
 // End of page

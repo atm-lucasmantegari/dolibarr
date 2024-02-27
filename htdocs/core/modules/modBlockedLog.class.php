@@ -79,7 +79,7 @@ class modBlockedLog extends DolibarrModules
 
 		// Currently, activation is not automatic because only companies (in France) making invoices to non business customers must
 		// enable this module.
-		/*if (! empty($conf->global->BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY))
+		/*if (!empty($conf->global->BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY))
 		{
 			$tmp=explode(',', $conf->global->BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY);
 			$this->automatic_activation = array();
@@ -91,8 +91,8 @@ class modBlockedLog extends DolibarrModules
 		//var_dump($this->automatic_activation);
 
 		$this->always_enabled = (!empty($conf->blockedlog->enabled)
-			&& !empty($conf->global->BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY)
-			&& in_array((empty($mysoc->country_code) ? '' : $mysoc->country_code), explode(',', $conf->global->BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY))
+			&& getDolGlobalString('BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY')
+			&& in_array((empty($mysoc->country_code) ? '' : $mysoc->country_code), explode(',', getDolGlobalString('BLOCKEDLOG_DISABLE_NOT_ALLOWED_FOR_COUNTRY')))
 			&& $this->alreadyUsed());
 
 		// Constants
@@ -170,9 +170,9 @@ class modBlockedLog extends DolibarrModules
 		$sql = array();
 
 		// If already used, we add an entry to show we enable module
-		   require_once DOL_DOCUMENT_ROOT.'/blockedlog/class/blockedlog.class.php';
+		require_once DOL_DOCUMENT_ROOT . '/blockedlog/class/blockedlog.class.php';
 
-		   $object = new stdClass();
+		$object = new stdClass();
 		$object->id = 1;
 		$object->element = 'module';
 		$object->ref = 'systemevent';
@@ -183,7 +183,7 @@ class modBlockedLog extends DolibarrModules
 		$result = $b->setObjectData($object, 'MODULE_SET', 0);
 		if ($result < 0) {
 			$this->error = $b->error;
-			$this->errors = $b->erros;
+			$this->errors = $b->errors;
 			return 0;
 		}
 
@@ -207,7 +207,6 @@ class modBlockedLog extends DolibarrModules
 	 */
 	public function remove($options = '')
 	{
-
 		global $conf, $user;
 
 		$sql = array();
@@ -226,7 +225,7 @@ class modBlockedLog extends DolibarrModules
 		$result = $b->setObjectData($object, 'MODULE_RESET', 0);
 		if ($result < 0) {
 			$this->error = $b->error;
-			$this->errors = $b->erros;
+			$this->errors = $b->errors;
 			return 0;
 		}
 

@@ -63,7 +63,17 @@ include_once DOL_DOCUMENT_ROOT.'/website/class/website.class.php';
 include_once DOL_DOCUMENT_ROOT.'/website/class/websitepage.class.php';
 include_once DOL_DOCUMENT_ROOT.'/core/lib/website2.lib.php';
 
+
+/*
+ * Main
+ */
+
 $langs->load('main');
+
+if (!empty($dolibarr_main_db_readonly)) {
+	print "Error: instance in read-onyl mode\n";
+	exit(-1);
+}
 
 $joomlaserverinfoarray = preg_split('/(:|@|\/)/', $joomlaserverinfo);
 $joomlalogin = $joomlaserverinfoarray[0];
@@ -116,7 +126,9 @@ if ($blogpostfooter === false) {
 
 $db->begin();
 
-$i = 0; $nbimported = 0; $nbalreadyexists = 0;
+$i = 0;
+$nbimported = 0;
+$nbalreadyexists = 0;
 while ($obj = $dbjoomla->fetch_object($resql)) {
 	if ($obj) {
 		$i++;

@@ -63,12 +63,17 @@ print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
 dol_syslog($script_file." launched with arg ".join(',', $argv));
 
 /*
- * if (! $conf->global->LDAP_SYNCHRO_ACTIVE)
- * {
+ * if (getDolGlobalString('LDAP_SYNCHRO_ACTIVE')) {
  * print $langs->trans("LDAPSynchronizationNotSetupInDolibarr");
  * exit(-1);
  * }
  */
+
+if (!empty($dolibarr_main_db_readonly)) {
+	print "Error: instance in read-onyl mode\n";
+	exit(-1);
+}
+
 
 $sql = "SELECT rowid";
 $sql .= " FROM ".MAIN_DB_PREFIX."adherent_type";
@@ -115,7 +120,6 @@ if ($resql) {
 		}
 
 		$ldap->unbind();
-		$ldap->close();
 	} else {
 		print $ldap->error;
 	}

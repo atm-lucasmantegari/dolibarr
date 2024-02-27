@@ -119,6 +119,7 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 		$texte = $langs->trans('GenericNumRefModelDesc')."<br>\n";
 		$texte .= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 		$texte .= '<input type="hidden" name="token" value="'.newToken().'">';
+		$texte .= '<input type="hidden" name="page_y" value="">';
 		$texte .= '<input type="hidden" name="action" value="setModuleOptions">';
 		$texte .= '<input type="hidden" name="param1" value="COMPANY_ELEPHANT_MASK_CUSTOMER">';
 		$texte .= '<input type="hidden" name="param2" value="COMPANY_ELEPHANT_MASK_SUPPLIER">';
@@ -132,15 +133,15 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 
 		// Parametrage du prefix customers
 		$texte .= '<tr><td>'.$langs->trans("Mask").' ('.$langs->trans("CustomerCodeModel").'):</td>';
-		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value1" value="'.$conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER.'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
+		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value1" value="'.getDolGlobalString('COMPANY_ELEPHANT_MASK_CUSTOMER').'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
 
-		$texte .= '<td class="left" rowspan="2">&nbsp; <input type="submit" class="button" value="'.$langs->trans("Modify").'" name="Button"'.$disabled.'></td>';
+		$texte .= '<td class="left" rowspan="2">&nbsp; <input type="submit" class="button button-edit reposition smallpaddingimp" name="modify" value="'.$langs->trans("Modify").'"'.$disabled.'></td>';
 
 		$texte .= '</tr>';
 
 		// Parametrage du prefix suppliers
 		$texte .= '<tr><td>'.$langs->trans("Mask").' ('.$langs->trans("SupplierCodeModel").'):</td>';
-		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value2" value="'.$conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER.'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
+		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value2" value="'.getDolGlobalString('COMPANY_ELEPHANT_MASK_SUPPLIER').'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
 		$texte .= '</tr>';
 
 		$texte .= '</table>';
@@ -160,31 +161,44 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 	 */
 	public function getExample($langs, $objsoc = 0, $type = -1)
 	{
+		$error = 0;
 		$examplecust = '';
 		$examplesup = '';
 		$errmsg = array(
 			"ErrorBadMask",
 			"ErrorCantUseRazIfNoYearInMask",
 			"ErrorCantUseRazInStartedYearIfNoYearMonthInMask",
+			"ErrorCounterMustHaveMoreThan3Digits",
+			"ErrorBadMaskBadRazMonth",
+			"ErrorCantUseRazWithYearOnOneDigit",
 		);
+
+		$cssforerror = (getDolGlobalString('SOCIETE_CODECLIENT_ADDON') == 'mod_codeclient_elephant' ? 'error' : 'opacitymedium');
+
 		if ($type != 1) {
 			$examplecust = $this->getNextValue($objsoc, 0);
-			if (!$examplecust) {
-				$examplecust = $langs->trans('NotConfigured');
+			if (!$examplecust && ($cssforerror == 'error' || $this->error != 'NotConfigured')) {
+				$langs->load("errors");
+				$examplecust = '<span class="'.$cssforerror.'">'.$langs->trans('ErrorBadMask').'</span>';
+				$error = 1;
 			}
 			if (in_array($examplecust, $errmsg)) {
 				$langs->load("errors");
-				$examplecust = $langs->trans($examplecust);
+				$examplecust = '<span class="'.$cssforerror.'">'.$langs->trans($examplecust).'</span>';
+				$error = 1;
 			}
 		}
 		if ($type != 0) {
 			$examplesup = $this->getNextValue($objsoc, 1);
-			if (!$examplesup) {
-				$examplesup = $langs->trans('NotConfigured');
+			if (!$examplesup && ($cssforerror == 'error' || $this->error != 'NotConfigured')) {
+				$langs->load("errors");
+				$examplesup = '<span class="'.$cssforerror.'">'.$langs->trans('ErrorBadMask').'</span>';
+				$error = 1;
 			}
 			if (in_array($examplesup, $errmsg)) {
 				$langs->load("errors");
-				$examplesup = $langs->trans($examplesup);
+				$examplesup = '<span class="'.$cssforerror.'">'.$langs->trans($examplesup).'</span>';
+				$error = 1;
 			}
 		}
 
@@ -213,10 +227,10 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 		// Get Mask value
 		$mask = '';
 		if ($type == 0) {
-			$mask = empty($conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER) ? '' : $conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER;
+			$mask = !getDolGlobalString('COMPANY_ELEPHANT_MASK_CUSTOMER') ? '' : $conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER;
 		}
 		if ($type == 1) {
-			$mask = empty($conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER) ? '' : $conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER;
+			$mask = !getDolGlobalString('COMPANY_ELEPHANT_MASK_SUPPLIER') ? '' : $conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER;
 		}
 		if (!$mask) {
 			$this->error = 'NotConfigured';
@@ -292,18 +306,18 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 		$result = 0;
 		$code = strtoupper(trim($code));
 
-		if (empty($code) && $this->code_null && empty($conf->global->MAIN_COMPANY_CODE_ALWAYS_REQUIRED)) {
+		if (empty($code) && $this->code_null && !getDolGlobalString('MAIN_COMPANY_CODE_ALWAYS_REQUIRED')) {
 			$result = 0;
-		} elseif (empty($code) && (!$this->code_null || !empty($conf->global->MAIN_COMPANY_CODE_ALWAYS_REQUIRED))) {
+		} elseif (empty($code) && (!$this->code_null || getDolGlobalString('MAIN_COMPANY_CODE_ALWAYS_REQUIRED'))) {
 			$result = -2;
 		} else {
 			// Get Mask value
 			$mask = '';
 			if ($type == 0) {
-				$mask = empty($conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER) ? '' : $conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER;
+				$mask = !getDolGlobalString('COMPANY_ELEPHANT_MASK_CUSTOMER') ? '' : $conf->global->COMPANY_ELEPHANT_MASK_CUSTOMER;
 			}
 			if ($type == 1) {
-				$mask = empty($conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER) ? '' : $conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER;
+				$mask = !getDolGlobalString('COMPANY_ELEPHANT_MASK_SUPPLIER') ? '' : $conf->global->COMPANY_ELEPHANT_MASK_SUPPLIER;
 			}
 			if (!$mask) {
 				$this->error = 'NotConfigured';
@@ -315,7 +329,7 @@ class mod_codeclient_elephant extends ModeleThirdPartyCode
 				return -6;
 			} else {
 				$is_dispo = $this->verif_dispo($db, $code, $soc, $type);
-				if ($is_dispo <> 0) {
+				if ($is_dispo != 0) {
 					$result = -3;
 				}
 			}

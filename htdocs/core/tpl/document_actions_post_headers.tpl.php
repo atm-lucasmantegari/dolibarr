@@ -41,6 +41,7 @@ if (empty($relativepathwithnofile)) {
 	$relativepathwithnofile = '';
 }
 
+// Set $permission from the $permissiontoadd var defined on calling page
 if (!isset($permission)) {
 	$permission = $permissiontoadd;
 }
@@ -63,10 +64,10 @@ if (in_array($modulepart, array('product', 'produit', 'societe', 'user', 'ticket
 
 
 /*
- * Confirm form to delete
+ * Confirm form to delete a file
  */
 
-if ($action == 'delete') {
+if ($action == 'deletefile' || $action == 'deletelink') {
 	$langs->load("companies"); // Need for string DeleteFile+ConfirmDeleteFiles
 	print $form->formconfirm(
 		$_SERVER["PHP_SELF"].'?id='.$object->id.'&urlfile='.urlencode(GETPOST("urlfile")).'&linkid='.GETPOST('linkid', 'int').(empty($param) ? '' : $param),
@@ -74,7 +75,7 @@ if ($action == 'delete') {
 		$langs->trans('ConfirmDeleteFile'),
 		'confirm_deletefile',
 		'',
-		0,
+		'',
 		1
 	);
 }
@@ -82,9 +83,9 @@ if ($action == 'delete') {
 // We define var to enable the feature to add prefix of uploaded files.
 // Caller of this include can make
 // $savingdocmask=dol_sanitizeFileName($object->ref).'-__file__';
-if (!isset($savingdocmask) || !empty($conf->global->MAIN_DISABLE_SUGGEST_REF_AS_PREFIX)) {
+if (!isset($savingdocmask) || getDolGlobalString('MAIN_DISABLE_SUGGEST_REF_AS_PREFIX')) {
 	$savingdocmask = '';
-	if (empty($conf->global->MAIN_DISABLE_SUGGEST_REF_AS_PREFIX)) {
+	if (!getDolGlobalString('MAIN_DISABLE_SUGGEST_REF_AS_PREFIX')) {
 		//var_dump($modulepart);
 		if (in_array($modulepart, array(
 			'facture_fournisseur',

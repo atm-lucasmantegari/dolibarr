@@ -70,7 +70,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 $error = 0;
 $website = GETPOST('website', 'alpha');
 $websiteid = GETPOST('websiteid', 'int');
-$pageid = GETPOST('page', 'alpha') ?GETPOST('page', 'alpha') : GETPOST('pageid', 'alpha');
+$pageid = GETPOST('page', 'alpha') ? GETPOST('page', 'alpha') : GETPOST('pageid', 'alpha');
 
 $accessallowed = 1;
 $type = '';
@@ -81,7 +81,7 @@ $type = '';
  */
 
 $appli = constant('DOL_APPLICATION_TITLE');
-if (!empty($conf->global->MAIN_APPLICATION_TITLE)) {
+if (getDolGlobalString('MAIN_APPLICATION_TITLE')) {
 	$appli = $conf->global->MAIN_APPLICATION_TITLE;
 }
 
@@ -122,7 +122,7 @@ if (empty($pageid))
 // Security: Delete string ../ into $original_file
 global $dolibarr_main_data_root;
 
-$original_file = $dolibarr_main_data_root.'/website/'.$website.'/styles.css.php';
+$original_file = $dolibarr_main_data_root.($conf->entity > 1 ? '/'.$conf->entity : '').'/website/'.$website.'/styles.css.php';
 
 // Find the subdirectory name as the reference
 $refname = basename(dirname($original_file)."/");

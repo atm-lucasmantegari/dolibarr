@@ -24,7 +24,7 @@ if (empty($conf) || !is_object($conf)) {
 }
 
 
-print "<!-- BEGIN PHP TEMPLATE -->\n";
+print "<!-- BEGIN PHP TEMPLATE expensereport/tpl/linkedobjectblock.tpl.php -->\n";
 
 
 global $user;
@@ -42,12 +42,12 @@ foreach ($linkedObjectBlock as $key => $objectlink) {
 	<td></td>
 	<td class="center"><?php echo dol_print_date($objectlink->date_debut, 'day'); ?></td>
 	<td class="right"><?php
-	if ($user->rights->expensereport->lire) {
+	if ($user->hasRight('expensereport', 'lire')) {
 		$total = $total + $objectlink->total_ht;
 		echo price($objectlink->total_ht);
 	} ?></td>
 	<td class="right"><?php echo $objectlink->getLibStatut(3); ?></td>
-	<td class="right"><a class="reposition" href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=dellink&dellinkid='.$key; ?>"><?php echo img_picto($langs->transnoentitiesnoconv("RemoveLink"), 'unlink'); ?></a></td>
+	<td class="right"><a class="reposition" href="<?php echo $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=dellink&token='.newToken().'&dellinkid='.$key; ?>"><?php echo img_picto($langs->transnoentitiesnoconv("RemoveLink"), 'unlink'); ?></a></td>
 </tr>
 	<?php
 }

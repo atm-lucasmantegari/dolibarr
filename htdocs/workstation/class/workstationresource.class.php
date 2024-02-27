@@ -38,8 +38,8 @@ class WorkstationResource extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields = array(
-		'fk_workstation' => array ('type' => 'integer'),
-		'fk_resource' => array ('type' => 'integer')
+		'fk_workstation' => array('type' => 'integer'),
+		'fk_resource' => array('type' => 'integer')
 	);
 
 	/**
@@ -100,7 +100,7 @@ class WorkstationResource extends CommonObject
 	 * Function used to remove all resources linked to a workstation
 	 *
 	 * @param	int		$fk_workstation		Id of workstation we need to remove linked resources
-	 * @return 	int							<0 if KO, 0 if nothing done, >0 if OK and something done
+	 * @return 	int							Return integer <0 if KO, 0 if nothing done, >0 if OK and something done
 	 */
 	public static function deleteAllResourcesOfWorkstation($fk_workstation)
 	{

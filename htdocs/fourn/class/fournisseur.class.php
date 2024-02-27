@@ -53,29 +53,26 @@ class Fournisseur extends Societe
 	/**
 	 * Return nb of orders
 	 *
-	 * @return 	int		Nb of orders
+	 * @return 	int		Nb of orders for current supplier
 	 */
 	public function getNbOfOrders()
 	{
+		$num = 0;
+
 		$sql = "SELECT rowid";
 		$sql .= " FROM ".MAIN_DB_PREFIX."commande_fournisseur as cf";
-		$sql .= " WHERE cf.fk_soc = ".$this->id;
+		$sql .= " WHERE cf.fk_soc = ".((int) $this->id);
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			$num = $this->db->num_rows($resql);
-
-			if ($num == 1) {
-				$row = $this->db->fetch_row($resql);
-
-				$this->single_open_commande = $row[0];
-			}
 		}
+
 		return $num;
 	}
 
 	/**
-	 * Returns number of ref prices (not number of products).
+	 * Returns number of ref prices (not number of products) for current supplier
 	 *
 	 * @return	int		Nb of ref prices, or <0 if error
 	 */
@@ -101,25 +98,31 @@ class Fournisseur extends Societe
 	/**
 	 * Load statistics indicators
 	 *
-	 * @return     int         <0 if KO, >0 if OK
+	 * @return     int         Return integer <0 if KO, >0 if OK
 	 */
 	public function load_state_board()
 	{
 		// phpcs:enable
-		global $conf, $user;
+		global $conf, $user, $hookmanager;
 
 		$this->nb = array();
 		$clause = "WHERE";
 
 		$sql = "SELECT count(s.rowid) as nb";
 		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
-		if (!$user->rights->societe->client->voir && !$user->socid) {
+		if (!$user->hasRight("societe", "client", "voir") && !$user->socid) {
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe_commerciaux as sc ON s.rowid = sc.fk_soc";
 			$sql .= " WHERE sc.fk_user = ".((int) $user->id);
 			$clause = "AND";
 		}
 		$sql .= " ".$clause." s.fournisseur = 1";
 		$sql .= " AND s.entity IN (".getEntity('societe').")";
+		// Add where from hooks
+		if (is_object($hookmanager)) {
+			$parameters = array();
+			$reshook = $hookmanager->executeHooks('printFieldListWhere', $parameters, $this); // Note that $action and $object may have been modified by hook
+			$sql .= $hookmanager->resPrint;
+		}
 
 		$resql = $this->db->query($sql);
 		if ($resql) {
@@ -141,7 +144,7 @@ class Fournisseur extends Societe
 	 *
 	 *  @param      User	$user       User asking creation
 	 *	@param		string	$name		Category name
-	 *  @return     int         		<0 if KO, 0 if OK
+	 *  @return     int         		Return integer <0 if KO, 0 if OK
 	 */
 	public function CreateCategory($user, $name)
 	{
@@ -178,12 +181,12 @@ class Fournisseur extends Societe
 
 		$sql = "SELECT s.rowid, s.nom as name";
 		$sql .= " FROM ".MAIN_DB_PREFIX."societe as s";
-		if (!$user->rights->societe->client->voir && !$user->socid) {
+		if (!$user->hasRight("societe", "client", "voir") && !$user->socid) {
 			$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc";
 		}
 		$sql .= " WHERE s.fournisseur = 1";
 		$sql .= " AND s.entity IN (".getEntity('societe').")";
-		if (!$user->rights->societe->client->voir && !$user->socid) {
+		if (!$user->hasRight("societe", "client", "voir") && !$user->socid) {
 			$sql .= " AND s.rowid = sc.fk_soc AND sc.fk_user = ".((int) $user->id);
 		}
 
@@ -203,17 +206,17 @@ class Fournisseur extends Societe
 	/**
 	 * Function used to replace a thirdparty id with another one.
 	 *
-	 * @param  DoliDB  $db             Database handler
-	 * @param  int     $origin_id      Old third-party id
-	 * @param  int     $dest_id        New third-party id
-	 * @return bool
+	 * @param 	DoliDB 	$dbs 		Database handler, because function is static we name it $dbs not $db to avoid breaking coding test
+	 * @param 	int 	$origin_id 	Old thirdparty id
+	 * @param 	int 	$dest_id 	New thirdparty id
+	 * @return 	bool
 	 */
-	public static function replaceThirdparty(DoliDB $db, $origin_id, $dest_id)
+	public static function replaceThirdparty(DoliDB $dbs, $origin_id, $dest_id)
 	{
 		$tables = array(
 			'facture_fourn'
 		);
 
-		return CommonObject::commonReplaceThirdparty($db, $origin_id, $dest_id, $tables);
+		return CommonObject::commonReplaceThirdparty($dbs, $origin_id, $dest_id, $tables);
 	}
 }

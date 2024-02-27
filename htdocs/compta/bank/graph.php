@@ -23,6 +23,7 @@
  *	\brief      Page graph des transactions bancaires
  */
 
+// Load Dolibarr environment
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/bank.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
@@ -33,6 +34,9 @@ $langs->loadLangs(array('banks', 'categories'));
 
 $WIDTH = DolGraph::getDefaultGraphSizeForStats('width', 768);
 $HEIGHT = DolGraph::getDefaultGraphSizeForStats('height', 200);
+
+// Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
+$hookmanager->initHooks(array('bankstats', 'globalcard'));
 
 // Security check
 if (GETPOST('account') || GETPOST('ref')) {
@@ -55,11 +59,6 @@ $error = 0;
 /*
  * View
  */
-
-$title = $langs->trans("FinancialAccount").' - '.$langs->trans("Graph");
-$helpurl = "";
-llxHeader('', $title, $helpurl);
-
 $form = new Form($db);
 
 $datetime = dol_now();
@@ -83,6 +82,10 @@ if (GETPOST("ref")) {
 	$account = $object->id;
 }
 
+$title = $object->ref.' - '.$langs->trans("Graph");
+$helpurl = "";
+llxHeader('', $title, $helpurl);
+
 $result = dol_mkdir($conf->bank->dir_temp);
 if ($result < 0) {
 	$langs->load("errors");
@@ -95,7 +98,7 @@ if ($result < 0) {
 	$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
 	$sql .= " WHERE b.fk_account = ba.rowid";
 	$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
-	if ($account && $_GET["option"] != 'all') {
+	if ($account && GETPOST("option") != 'all') {
 		$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 	}
 
@@ -137,7 +140,7 @@ if ($result < 0) {
 		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
 		$sql .= " AND b.datev >= '".$db->escape($year)."-".$db->escape($month)."-01 00:00:00'";
 		$sql .= " AND b.datev < '".$db->escape($yearnext)."-".$db->escape($monthnext)."-01 00:00:00'";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%Y%m%d')";
@@ -165,7 +168,7 @@ if ($result < 0) {
 		$sql .= " WHERE b.fk_account = ba.rowid";
 		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
 		$sql .= " AND b.datev < '".$db->escape($year)."-".sprintf("%02s", $month)."-01'";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 
@@ -185,7 +188,8 @@ if ($result < 0) {
 
 		$subtotal = 0;
 		$day = dol_mktime(12, 0, 0, $month, 1, $year);
-		$textdate = strftime("%Y%m%d", $day);
+		//$textdate = strftime("%Y%m%d", $day);
+		$textdate = dol_print_date($day, "%Y%m%d");
 		$xyear = substr($textdate, 0, 4);
 		$xday = substr($textdate, 6, 2);
 		$xmonth = substr($textdate, 4, 2);
@@ -204,7 +208,8 @@ if ($result < 0) {
 			$labels[$i] = $xday;
 
 			$day += 86400;
-			$textdate = strftime("%Y%m%d", $day);
+			//$textdate = strftime("%Y%m%d", $day);
+			$textdate = dol_print_date($day, "%Y%m%d");
 			$xyear = substr($textdate, 0, 4);
 			$xday = substr($textdate, 6, 2);
 			$xmonth = substr($textdate, 4, 2);
@@ -279,7 +284,7 @@ if ($result < 0) {
 		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
 		$sql .= " AND b.datev >= '".$db->escape($year)."-01-01 00:00:00'";
 		$sql .= " AND b.datev <= '".$db->escape($year)."-12-31 23:59:59'";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%Y%m%d')";
@@ -307,7 +312,7 @@ if ($result < 0) {
 		$sql .= " WHERE b.fk_account = ba.rowid";
 		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
 		$sql .= " AND b.datev < '".$db->escape($year)."-01-01'";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 
@@ -329,7 +334,8 @@ if ($result < 0) {
 		$subtotal = 0;
 		$now = time();
 		$day = dol_mktime(12, 0, 0, 1, 1, $year);
-		$textdate = strftime("%Y%m%d", $day);
+		//$textdate = strftime("%Y%m%d", $day);
+		$textdate = dol_print_date($day, "%Y%m%d");
 		$xyear = substr($textdate, 0, 4);
 		$xday = substr($textdate, 6, 2);
 
@@ -349,7 +355,8 @@ if ($result < 0) {
 			}*/
 			$labels[$i] = dol_print_date($day, "%Y%m");
 			$day += 86400;
-			$textdate = strftime("%Y%m%d", $day);
+			//$textdate = strftime("%Y%m%d", $day);
+			$textdate = dol_print_date($day, "%Y%m%d");
 			$xyear = substr($textdate, 0, 4);
 			$xday = substr($textdate, 6, 2);
 			$i++;
@@ -415,7 +422,7 @@ if ($result < 0) {
 		$sql .= ", ".MAIN_DB_PREFIX."bank_account as ba";
 		$sql .= " WHERE b.fk_account = ba.rowid";
 		$sql .= " AND ba.entity IN (".getEntity('bank_account').")";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%Y%m%d')";
@@ -446,7 +453,8 @@ if ($result < 0) {
 		$subtotal = 0;
 
 		$day = $min;
-		$textdate = strftime("%Y%m%d", $day);
+		//$textdate = strftime("%Y%m%d", $day);
+		$textdate = dol_print_date($day, "%Y%m%d");
 		//print "x".$textdate;
 		$i = 0;
 		while ($day <= ($max + 86400)) {	// On va au dela du dernier jour
@@ -455,7 +463,7 @@ if ($result < 0) {
 			if ($day > ($max + 86400)) {
 				$datas[$i] = ''; // Valeur speciale permettant de ne pas tracer le graph
 			} else {
-				$datas[$i] = 0 + $solde + $subtotal;
+				$datas[$i] = $solde + $subtotal;
 			}
 			$datamin[$i] = $object->min_desired;
 			$dataall[$i] = $object->min_allowed;
@@ -466,7 +474,8 @@ if ($result < 0) {
 			$labels[$i] = substr($textdate, 0, 6);
 
 			$day += 86400;
-			$textdate = strftime("%Y%m%d", $day);
+			//$textdate = strftime("%Y%m%d", $day);
+			$textdate = dol_print_date($day, "%Y%m%d");
 			$i++;
 		}
 
@@ -540,7 +549,7 @@ if ($result < 0) {
 		$sql .= " AND b.datev >= '".$db->escape($year)."-".$db->escape($month)."-01 00:00:00'";
 		$sql .= " AND b.datev < '".$db->escape($yearnext)."-".$db->escape($monthnext)."-01 00:00:00'";
 		$sql .= " AND b.amount > 0";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%d')";
@@ -575,7 +584,7 @@ if ($result < 0) {
 		$sql .= " AND b.datev >= '".$db->escape($year)."-".$db->escape($month)."-01 00:00:00'";
 		$sql .= " AND b.datev < '".$db->escape($yearnext)."-".$db->escape($monthnext)."-01 00:00:00'";
 		$sql .= " AND b.amount < 0";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%d')";
@@ -649,7 +658,7 @@ if ($result < 0) {
 		$sql .= " AND b.datev >= '".$db->escape($year)."-01-01 00:00:00'";
 		$sql .= " AND b.datev <= '".$db->escape($year)."-12-31 23:59:59'";
 		$sql .= " AND b.amount > 0";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%m');";
@@ -676,7 +685,7 @@ if ($result < 0) {
 		$sql .= " AND b.datev >= '".$db->escape($year)."-01-01 00:00:00'";
 		$sql .= " AND b.datev <= '".$db->escape($year)."-12-31 23:59:59'";
 		$sql .= " AND b.amount < 0";
-		if ($account && $_GET["option"] != 'all') {
+		if ($account && GETPOST("option") != 'all') {
 			$sql .= " AND b.fk_account IN (".$db->sanitize($account).")";
 		}
 		$sql .= " GROUP BY date_format(b.datev,'%m')";
@@ -748,7 +757,7 @@ if ($account) {
 	if (!preg_match('/,/', $account)) {
 		$moreparam = '&month='.$month.'&year='.$year.($mode == 'showalltime' ? '&mode=showalltime' : '');
 
-		if ($_GET["option"] != 'all') {
+		if (GETPOST("option") != 'all') {
 			$morehtml = '<a href="'.$_SERVER["PHP_SELF"].'?account='.$account.'&option=all'.$moreparam.'">'.$langs->trans("ShowAllAccounts").'</a>';
 			dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', '', $moreparam, 0, '', '', 1);
 		} else {

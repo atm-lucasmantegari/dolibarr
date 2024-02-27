@@ -29,8 +29,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/product/modules_product.class.php'
 
 
 /**
- *       \class 		mod_codeproduct_elephant
- *       \brief 		Class to manage product code with elephant rule
+ *  Class to manage product code with elephant rule
  */
 class mod_codeproduct_elephant extends ModeleProductCode
 {
@@ -104,6 +103,7 @@ class mod_codeproduct_elephant extends ModeleProductCode
 		$texte = $langs->trans('GenericNumRefModelDesc')."<br>\n";
 		$texte .= '<form action="'.$_SERVER["PHP_SELF"].'" method="POST">';
 		$texte .= '<input type="hidden" name="token" value="'.newToken().'">';
+		$texte .= '<input type="hidden" name="page_y" value="">';
 		$texte .= '<input type="hidden" name="action" value="setModuleOptions">';
 		$texte .= '<input type="hidden" name="param1" value="PRODUCT_ELEPHANT_MASK_PRODUCT">';
 		$texte .= '<input type="hidden" name="param2" value="PRODUCT_ELEPHANT_MASK_SERVICE">';
@@ -116,15 +116,15 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 		// Parametrage du prefix customers
 		$texte .= '<tr><td>'.$langs->trans("Mask").' ('.$langs->trans("ProductCodeModel").'):</td>';
-		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value1" value="'.(!empty($conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT) ? $conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT : '').'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
+		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value1" value="'.(getDolGlobalString('PRODUCT_ELEPHANT_MASK_PRODUCT') ? $conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT : '').'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
 
-		$texte .= '<td class="left" rowspan="2">&nbsp; <input type="submit" class="button small" value="'.$langs->trans("Modify").'" name="Button"'.$disabled.'></td>';
+		$texte .= '<td class="left" rowspan="2">&nbsp; <input type="submit" class="button button-edit reposition smallpaddingimp" name="modify" value="'.$langs->trans("Modify").'"'.$disabled.'></td>';
 
 		$texte .= '</tr>';
 
 		// Parametrage du prefix suppliers
 		$texte .= '<tr><td>'.$langs->trans("Mask").' ('.$langs->trans("ServiceCodeModel").'):</td>';
-		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value2" value="'.(!empty($conf->global->PRODUCT_ELEPHANT_MASK_SERVICE) ? $conf->global->PRODUCT_ELEPHANT_MASK_SERVICE : '').'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
+		$texte .= '<td class="right">'.$form->textwithpicto('<input type="text" class="flat minwidth175" name="value2" value="'.(getDolGlobalString('PRODUCT_ELEPHANT_MASK_SERVICE') ? $conf->global->PRODUCT_ELEPHANT_MASK_SERVICE : '').'"'.$disabled.'>', $tooltip, 1, 1).'</td>';
 		$texte .= '</tr>';
 
 		$texte .= '</table>';
@@ -138,12 +138,14 @@ class mod_codeproduct_elephant extends ModeleProductCode
 	 * Return an example of result returned by getNextValue
 	 *
 	 * @param	Translate	$langs		Object langs
-	 * @param	product		$objproduct		Object product
+	 * @param	Product		$objproduct		Object product
 	 * @param	int			$type		Type of third party (1:customer, 2:supplier, -1:autodetect)
 	 * @return	string					Return string example
 	 */
 	public function getExample($langs, $objproduct = 0, $type = -1)
 	{
+		$exampleproduct = $exampleservice = '';
+
 		if ($type == 0 || $type == -1) {
 			$exampleproduct = $this->getNextValue($objproduct, 0);
 			if (!$exampleproduct) {
@@ -189,9 +191,9 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 		// Get Mask value
 		$mask = '';
-		if ($type == 0 && !empty($conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT)) {
+		if ($type == 0 && getDolGlobalString('PRODUCT_ELEPHANT_MASK_PRODUCT')) {
 			$mask = $conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT;
-		} elseif ($type == 1 && !empty($conf->global->PRODUCT_ELEPHANT_MASK_SERVICE)) {
+		} elseif ($type == 1 && getDolGlobalString('PRODUCT_ELEPHANT_MASK_SERVICE')) {
 			$mask = $conf->global->PRODUCT_ELEPHANT_MASK_SERVICE;
 		}
 
@@ -214,7 +216,7 @@ class mod_codeproduct_elephant extends ModeleProductCode
 
 		$now = dol_now();
 
-		if (!empty($conf->global->PRODUCT_ELEPHANT_ADD_WHERE)) {
+		if (getDolGlobalString('PRODUCT_ELEPHANT_ADD_WHERE')) {
 			$where = ' AND ('.dol_string_nospecial(dol_string_unaccent($conf->global->PRODUCT_ELEPHANT_ADD_WHERE), '_', array(',', '@', '"', "|", ";", ":")).')';
 		}
 
@@ -272,18 +274,18 @@ class mod_codeproduct_elephant extends ModeleProductCode
 		$result = 0;
 		$code = strtoupper(trim($code));
 
-		if (empty($code) && $this->code_null && empty($conf->global->MAIN_COMPANY_CODE_ALWAYS_REQUIRED)) {
+		if (empty($code) && $this->code_null && !getDolGlobalString('MAIN_COMPANY_CODE_ALWAYS_REQUIRED')) {
 			$result = 0;
-		} elseif (empty($code) && (!$this->code_null || !empty($conf->global->MAIN_COMPANY_CODE_ALWAYS_REQUIRED))) {
+		} elseif (empty($code) && (!$this->code_null || getDolGlobalString('MAIN_COMPANY_CODE_ALWAYS_REQUIRED'))) {
 			$result = -2;
 		} else {
 			// Get Mask value
 			$mask = '';
 			if ($type == 0) {
-				$mask = empty($conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT) ? '' : $conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT;
+				$mask = !getDolGlobalString('PRODUCT_ELEPHANT_MASK_PRODUCT') ? '' : $conf->global->PRODUCT_ELEPHANT_MASK_PRODUCT;
 			}
 			if ($type == 1) {
-				$mask = empty($conf->global->PRODUCT_ELEPHANT_MASK_SERVICE) ? '' : $conf->global->PRODUCT_ELEPHANT_MASK_SERVICE;
+				$mask = !getDolGlobalString('PRODUCT_ELEPHANT_MASK_SERVICE') ? '' : $conf->global->PRODUCT_ELEPHANT_MASK_SERVICE;
 			}
 			if (!$mask) {
 				$this->error = 'NotConfigured';

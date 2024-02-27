@@ -1,4 +1,5 @@
 <?php
+
 // This tpl file is included into the init part of pages, so before action.
 // So no output must be done.
 
@@ -23,9 +24,9 @@ if (!empty($extrafieldsobjectkey)) {	// $extrafieldsobject is the $object->table
 				$arrayfields[$extrafieldsobjectprefix.$key] = array(
 					'label'    => $extrafields->attributes[$extrafieldsobjectkey]['label'][$key],
 					'type'     => $extrafields->attributes[$extrafieldsobjectkey]['type'][$key],
-					'checked'  => ((dol_eval($extrafields->attributes[$extrafieldsobjectkey]['list'][$key], 1) <= 0) ? 0 : 1),
+					'checked'  => ((dol_eval($extrafields->attributes[$extrafieldsobjectkey]['list'][$key], 1, 1, '1') <= 0) ? 0 : 1),
 					'position' => $extrafields->attributes[$extrafieldsobjectkey]['pos'][$key],
-					'enabled'  => (abs((int) $extrafields->attributes[$extrafieldsobjectkey]['list'][$key]) != 3 && dol_eval($extrafields->attributes[$extrafieldsobjectkey]['perms'][$key], 1)),
+					'enabled'  => (abs((int) dol_eval($extrafields->attributes[$extrafieldsobjectkey]['list'][$key], 1)) != 3 && dol_eval($extrafields->attributes[$extrafieldsobjectkey]['perms'][$key], 1, 1, '1')),
 					'langfile' => $extrafields->attributes[$extrafieldsobjectkey]['langfile'][$key],
 					'help'     => $extrafields->attributes[$extrafieldsobjectkey]['help'][$key],
 				);

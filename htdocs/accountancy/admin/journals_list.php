@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2017		Alexandre Spangaro   <aspangaro@open-dsi.fr>
+/* Copyright (C) 2017-2024  Alexandre Spangaro   <aspangaro@easya.solutions>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ if (!defined('CSRFCHECK_WITH_TOKEN')) {
 	define('CSRFCHECK_WITH_TOKEN', '1'); // Force use of CSRF protection with tokens even for GET
 }
 
+// Load Dolibarr environment
 require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formadmin.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formcompany.class.php';
@@ -38,14 +39,14 @@ require_once DOL_DOCUMENT_ROOT.'/accountancy/class/accountingjournal.class.php';
 // Load translation files required by the page
 $langs->loadLangs(array("admin", "compta", "accountancy"));
 
-$action = GETPOST('action', 'aZ09') ?GETPOST('action', 'aZ09') : 'view';
+$action = GETPOST('action', 'aZ09') ? GETPOST('action', 'aZ09') : 'view';
 $confirm = GETPOST('confirm', 'alpha');
 $id = 35;
 $rowid = GETPOST('rowid', 'alpha');
 $code = GETPOST('code', 'alpha');
 
 // Security access
-if (empty($user->rights->accounting->chartofaccount)) {
+if (!$user->hasRight('accounting', 'chartofaccount')) {
 	accessforbidden();
 }
 
@@ -55,11 +56,11 @@ $actl[0] = img_picto($langs->trans("Disabled"), 'switch_off', 'class="size15x"')
 $actl[1] = img_picto($langs->trans("Activated"), 'switch_on', 'class="size15x"');
 
 $listoffset = GETPOST('listoffset', 'alpha');
-$listlimit = GETPOST('listlimit', 'int') > 0 ?GETPOST('listlimit', 'int') : 1000;
+$listlimit = GETPOST('listlimit', 'int') > 0 ? GETPOST('listlimit', 'int') : 1000;
 $active = 1;
 
-$sortfield = GETPOST("sortfield", 'alpha');
-$sortorder = GETPOST("sortorder", 'alpha');
+$sortfield = GETPOST('sortfield', 'aZ09comma');
+$sortorder = GETPOST('sortorder', 'aZ09comma');
 $page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
 if (empty($page) || $page == -1) {
 	$page = 0;
@@ -75,6 +76,8 @@ if (empty($sortorder)) {
 }
 
 $error = 0;
+
+$search_country_id = GETPOST('search_country_id', 'int');
 
 // Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
 $hookmanager->initHooks(array('admin'));
@@ -121,7 +124,7 @@ $tabrowid[35] = "";
 
 // Condition to show dictionary in setup page
 $tabcond = array();
-$tabcond[35] = !empty($conf->accounting->enabled);
+$tabcond[35] = isModEnabled('accounting');
 
 // List of help for fields
 $tabhelp = array();
@@ -165,51 +168,25 @@ if (GETPOST('actionadd', 'alpha') || GETPOST('actionmodify', 'alpha')) {
 
 	// Check that all fields are filled
 	$ok = 1;
-	foreach ($listfield as $f => $value) {
-		if ($fieldnamekey == 'libelle' || ($fieldnamekey == 'label')) {
-			$fieldnamekey = 'Label';
-		}
-		if ($fieldnamekey == 'code') {
-			$fieldnamekey = 'Code';
-		}
-		if ($fieldnamekey == 'nature') {
-			$fieldnamekey = 'NatureOfJournal';
-		}
-	}
+
 	// Other checks
 	if (GETPOSTISSET("code")) {
 		if (GETPOST("code") == '0') {
 			$ok = 0;
 			setEventMessages($langs->transnoentities('ErrorCodeCantContainZero'), null, 'errors');
 		}
-		/*if (!is_numeric($_POST['code']))	// disabled, code may not be in numeric base
-		{
-			$ok = 0;
-			$msg .= $langs->transnoentities('ErrorFieldFormat', $langs->transnoentities('Code')).'<br>';
-		}*/
 	}
 	if (!GETPOST('label', 'alpha')) {
 		setEventMessages($langs->transnoentities("ErrorFieldRequired", $langs->transnoentitiesnoconv("Label")), null, 'errors');
 		$ok = 0;
 	}
 
-	// Clean some parameters
-	if ($_POST["accountancy_code"] <= 0) {
-		$_POST["accountancy_code"] = ''; // If empty, we force to null
-	}
-	if ($_POST["accountancy_code_sell"] <= 0) {
-		$_POST["accountancy_code_sell"] = ''; // If empty, we force to null
-	}
-	if ($_POST["accountancy_code_buy"] <= 0) {
-		$_POST["accountancy_code_buy"] = ''; // If empty, we force to null
-	}
-
 	// Si verif ok et action add, on ajoute la ligne
 	if ($ok && GETPOST('actionadd', 'alpha')) {
 		if ($tabrowid[$id]) {
-			// Recupere id libre pour insertion
+			// Get free id for insert
 			$newid = 0;
-			$sql = "SELECT max(".$tabrowid[$id].") newid from ".$tabname[$id];
+			$sql = "SELECT MAX(".$tabrowid[$id].") newid from ".$tabname[$id];
 			$result = $db->query($sql);
 			if ($result) {
 				$obj = $db->fetch_object($result);
@@ -235,16 +212,13 @@ if (GETPOST('actionadd', 'alpha') || GETPOST('actionmodify', 'alpha')) {
 		}
 		$i = 0;
 		foreach ($listfieldinsert as $f => $value) {
-			if ($value == 'entity') {
-				$_POST[$listfieldvalue[$i]] = $conf->entity;
-			}
 			if ($i) {
 				$sql .= ",";
 			}
-			if ($_POST[$listfieldvalue[$i]] == '') {
+			if (GETPOST($listfieldvalue[$i]) == '') {
 				$sql .= "null"; // For vat, we want/accept code = ''
 			} else {
-				$sql .= "'".$db->escape($_POST[$listfieldvalue[$i]])."'";
+				$sql .= "'".$db->escape(GETPOST($listfieldvalue[$i]))."'";
 			}
 			$i++;
 		}
@@ -254,7 +228,7 @@ if (GETPOST('actionadd', 'alpha') || GETPOST('actionmodify', 'alpha')) {
 		$result = $db->query($sql);
 		if ($result) {	// Add is ok
 			setEventMessages($langs->transnoentities("RecordSaved"), null, 'mesgs');
-			$_POST = array('id'=>$id); // Clean $_POST array, we keep only
+			$_POST = array('id'=>$id); // Clean $_POST array, we keep only id
 		} else {
 			if ($db->errno() == 'DB_ERROR_RECORD_ALREADY_EXISTS') {
 				setEventMessages($langs->transnoentities("ErrorRecordAlreadyExists"), null, 'errors');
@@ -281,24 +255,15 @@ if (GETPOST('actionadd', 'alpha') || GETPOST('actionmodify', 'alpha')) {
 		}
 		$i = 0;
 		foreach ($listfieldmodify as $field) {
-			if ($field == 'price' || preg_match('/^amount/i', $field) || $field == 'taux') {
-				$_POST[$listfieldvalue[$i]] = price2num($_POST[$listfieldvalue[$i]], 'MU');
-			} elseif ($field == 'entity') {
-				$_POST[$listfieldvalue[$i]] = $conf->entity;
-			}
 			if ($i) {
 				$sql .= ",";
 			}
-			$sql .= $field."=";
-			if ($_POST[$listfieldvalue[$i]] == '' && !($listfieldvalue[$i] == 'code' && $id == 10)) {
-				$sql .= "null"; // For vat, we want/accept code = ''
-			} else {
-				$sql .= "'".$db->escape($_POST[$listfieldvalue[$i]])."'";
-			}
+			$sql .= $field." = ";
+			$sql .= "'".$db->escape(GETPOST($listfieldvalue[$i]))."'";
 			$i++;
 		}
 		$sql .= " WHERE ".$rowidcol." = ".((int) $rowid);
-		$sql .= " AND entity = ".$conf->entity;
+		$sql .= " AND entity = ".((int) $conf->entity);
 
 		dol_syslog("actionmodify", LOG_DEBUG);
 		//print $sql;
@@ -323,7 +288,7 @@ if ($action == 'confirm_delete' && $confirm == 'yes') {       // delete
 	}
 
 	$sql = "DELETE from ".$tabname[$id]." WHERE ".$rowidcol." = ".((int) $rowid);
-	$sql .= " AND entity = ".$conf->entity;
+	$sql .= " AND entity = ".((int) $conf->entity);
 
 	dol_syslog("delete", LOG_DEBUG);
 	$result = $db->query($sql);
@@ -386,7 +351,9 @@ if ($action == $acts[1]) {
 $form = new Form($db);
 $formadmin = new FormAdmin($db);
 
-llxHeader();
+$title = $langs->trans('AccountingJournals');
+$help_url = 'EN:Module_Double_Entry_Accounting#Setup|FR:Module_Comptabilit&eacute;_en_Partie_Double#Configuration';
+llxHeader('', $title, $help_url);
 
 $titre = $langs->trans("DictionarySetup");
 $linkback = '';
@@ -402,7 +369,6 @@ print load_fiche_titre($titre, $linkback, $titlepicto);
 if ($action == 'delete') {
 	print $form->formconfirm($_SERVER["PHP_SELF"].'?'.($page ? 'page='.$page.'&' : '').'sortfield='.$sortfield.'&sortorder='.$sortorder.'&rowid='.$rowid.'&code='.$code.'&id='.$id, $langs->trans('DeleteLine'), $langs->trans('ConfirmDeleteLine'), 'confirm_delete', '', 0, 1);
 }
-//var_dump($elementList);
 
 /*
  * Show a dictionary
@@ -410,7 +376,7 @@ if ($action == 'delete') {
 if ($id) {
 	// Complete requete recherche valeurs avec critere de tri
 	$sql = $tabsql[$id];
-	$sql .= " WHERE a.entity = ".$conf->entity;
+	$sql .= " WHERE a.entity = ".((int) $conf->entity);
 
 	// If sort order is "country", we use country_code instead
 	if ($sortfield == 'country') {
@@ -453,7 +419,7 @@ if ($id) {
 			if ($valuetoshow != '') {
 				print '<td class="'.$class.'">';
 				if (!empty($tabhelp[$id][$value]) && preg_match('/^http(s*):/i', $tabhelp[$id][$value])) {
-					print '<a href="'.$tabhelp[$id][$value].'" target="_blank">'.$valuetoshow.' '.img_help(1, $valuetoshow).'</a>';
+					print '<a href="'.$tabhelp[$id][$value].'">'.$valuetoshow.' '.img_help(1, $valuetoshow).'</a>';
 				} elseif (!empty($tabhelp[$id][$value])) {
 					print $form->textwithpicto($valuetoshow, $tabhelp[$id][$value]);
 				} else {
@@ -466,9 +432,9 @@ if ($id) {
 		print '<td>';
 		print '<input type="hidden" name="id" value="'.$id.'">';
 		print '</td>';
-		print '<td style="min-width: 26px;"></td>';
-		print '<td style="min-width: 26px;"></td>';
-		print '<td style="min-width: 26px;"></td>';
+		print '<td></td>';
+		print '<td></td>';
+		print '<td></td>';
 		print '</tr>';
 
 		// Line to enter new values
@@ -487,14 +453,15 @@ if ($id) {
 		$tmpaction = 'create';
 		$parameters = array('fieldlist'=>$fieldlist, 'tabname'=>$tabname[$id]);
 		$reshook = $hookmanager->executeHooks('createDictionaryFieldlist', $parameters, $obj, $tmpaction); // Note that $action and $object may have been modified by some hooks
-		$error = $hookmanager->error; $errors = $hookmanager->errors;
+		$error = $hookmanager->error;
+		$errors = $hookmanager->errors;
 
 		if (empty($reshook)) {
 			fieldListJournal($fieldlist, $obj, $tabname[$id], 'add');
 		}
 
 		print '<td colspan="4" class="right">';
-		print '<input type="submit" class="button" name="actionadd" value="'.$langs->trans("Add").'">';
+		print '<input type="submit" class="button button-add" name="actionadd" value="'.$langs->trans("Add").'">';
 		print '</td>';
 		print "</tr>";
 
@@ -510,9 +477,9 @@ if ($id) {
 		$num = $db->num_rows($resql);
 		$i = 0;
 
-		$param = '&id='.$id;
+		$param = '&id='.((int) $id);
 		if ($search_country_id > 0) {
-			$param .= '&search_country_id='.$search_country_id;
+			$param .= '&search_country_id='.urlencode($search_country_id);
 		}
 		$paramwithsearch = $param;
 		if ($sortorder) {
@@ -596,7 +563,8 @@ if ($id) {
 					$tmpaction = 'edit';
 					$parameters = array('fieldlist'=>$fieldlist, 'tabname'=>$tabname[$id]);
 					$reshook = $hookmanager->executeHooks('editDictionaryFieldlist', $parameters, $obj, $tmpaction); // Note that $action and $object may have been modified by some hooks
-					$error = $hookmanager->error; $errors = $hookmanager->errors;
+					$error = $hookmanager->error;
+					$errors = $hookmanager->errors;
 
 					// Show fields
 					if (empty($reshook)) {
@@ -606,23 +574,25 @@ if ($id) {
 					print '<td class="center" colspan="4">';
 					print '<input type="hidden" name="page" value="'.$page.'">';
 					print '<input type="hidden" name="rowid" value="'.$rowid.'">';
-					print '<input type="submit" class="button" name="actionmodify" value="'.$langs->trans("Modify").'">';
+					print '<input type="submit" class="button button-edit" name="actionmodify" value="'.$langs->trans("Modify").'">';
 					print '<input type="submit" class="button button-cancel" name="actioncancel" value="'.$langs->trans("Cancel").'">';
 					print '<div name="'.(!empty($obj->rowid) ? $obj->rowid : $obj->code).'"></div>';
 					print '</td>';
 				} else {
 					$tmpaction = 'view';
-					$parameters = array('var'=>$var, 'fieldlist'=>$fieldlist, 'tabname'=>$tabname[$id]);
+					$parameters = array('fieldlist'=>$fieldlist, 'tabname'=>$tabname[$id]);
 					$reshook = $hookmanager->executeHooks('viewDictionaryFieldlist', $parameters, $obj, $tmpaction); // Note that $action and $object may have been modified by some hooks
 
-					$error = $hookmanager->error; $errors = $hookmanager->errors;
+					$error = $hookmanager->error;
+					$errors = $hookmanager->errors;
 
 					if (empty($reshook)) {
 						$langs->load("accountancy");
 						foreach ($fieldlist as $field => $value) {
 							$showfield = 1;
 							$class = "left";
-							$valuetoshow = $obj->{$fieldlist[$field]};
+							$tmpvar = $fieldlist[$field];
+							$valuetoshow = $obj->$tmpvar;
 							if ($valuetoshow == 'all') {
 								$valuetoshow = $langs->trans('All');
 							} elseif ($fieldlist[$field] == 'nature' && $tabname[$id] == MAIN_DB_PREFIX.'accounting_journal') {
@@ -635,21 +605,17 @@ if ($id) {
 							$class = 'tddict';
 							// Show value for field
 							if ($showfield) {
-								print '<!-- '.$fieldlist[$field].' --><td class="'.$class.'">'.$valuetoshow.'</td>';
+								print '<!-- '.$fieldlist[$field].' --><td class="'.$class.'">'.dol_escape_htmltag($valuetoshow).'</td>';
 							}
 						}
 					}
 
 					// Can an entry be erased or disabled ?
-					$iserasable = 1; $canbedisabled = 1; $canbemodified = 1; // true by default
+					$iserasable = 1;
+					$canbedisabled = 1;
+					$canbemodified = 1; // true by default
 					if (isset($obj->code) && $id != 10) {
 						if (($obj->code == '0' || $obj->code == '' || preg_match('/unknown/i', $obj->code))) {
-							$iserasable = 0;
-							$canbedisabled = 0;
-						} elseif ($obj->code == 'RECEP') {
-							$iserasable = 0;
-							$canbedisabled = 0;
-						} elseif ($obj->code == 'EF0') {
 							$iserasable = 0;
 							$canbedisabled = 0;
 						}
@@ -657,7 +623,7 @@ if ($id) {
 
 					$canbemodified = $iserasable;
 
-					$url = $_SERVER["PHP_SELF"].'?'.($page ? 'page='.$page.'&' : '').'sortfield='.$sortfield.'&sortorder='.$sortorder.'&rowid='.(!empty($obj->rowid) ? $obj->rowid : (!empty($obj->code) ? $obj->code : '')).'&code='.(!empty($obj->code) ?urlencode($obj->code) : '');
+					$url = $_SERVER["PHP_SELF"].'?'.($page ? 'page='.$page.'&' : '').'sortfield='.$sortfield.'&sortorder='.$sortorder.'&rowid='.(!empty($obj->rowid) ? $obj->rowid : (!empty($obj->code) ? $obj->code : '')).'&code='.(!empty($obj->code) ? urlencode($obj->code) : '');
 					if ($param) {
 						$url .= '&'.$param;
 					}
@@ -726,7 +692,7 @@ $db->close();
  *  @param      string  $context        'add'=Output field for the "add form", 'edit'=Output field for the "edit form", 'hide'=Output field for the "add form" but we dont want it to be rendered
  *  @return     void
  */
-function fieldListJournal($fieldlist, $obj = '', $tabname = '', $context = '')
+function fieldListJournal($fieldlist, $obj = null, $tabname = '', $context = '')
 {
 	global $conf, $langs, $db;
 	global $form, $mysoc;
@@ -740,13 +706,14 @@ function fieldListJournal($fieldlist, $obj = '', $tabname = '', $context = '')
 	foreach ($fieldlist as $field => $value) {
 		if ($fieldlist[$field] == 'nature') {
 			print '<td>';
-			print $form->selectarray('nature', $sourceList, (!empty($obj->{$fieldlist[$field]}) ? $obj->{$fieldlist[$field]}:''));
+			print $form->selectarray('nature', $sourceList, (!empty($obj->{$fieldlist[$field]}) ? $obj->{$fieldlist[$field]} : ''));
 			print '</td>';
 		} elseif ($fieldlist[$field] == 'code' && isset($obj->{$fieldlist[$field]})) {
-			print '<td><input type="text" class="flat minwidth100" value="'.(!empty($obj->{$fieldlist[$field]}) ? $obj->{$fieldlist[$field]}:'').'" name="'.$fieldlist[$field].'"></td>';
+			print '<td><input type="text" class="flat minwidth100" value="'.(!empty($obj->{$fieldlist[$field]}) ? $obj->{$fieldlist[$field]} : '').'" name="'.$fieldlist[$field].'"></td>';
 		} else {
 			print '<td>';
-			$size = ''; $class = '';
+			$size = '';
+			$class = '';
 			if ($fieldlist[$field] == 'code') {
 				$class = 'maxwidth100';
 			}
@@ -756,7 +723,7 @@ function fieldListJournal($fieldlist, $obj = '', $tabname = '', $context = '')
 			if ($fieldlist[$field] == 'sortorder' || $fieldlist[$field] == 'sens' || $fieldlist[$field] == 'category_type') {
 				$size = 'size="2" ';
 			}
-			print '<input type="text" '.$size.'class="flat'.($class ? ' '.$class : '').'" value="'.(isset($obj->{$fieldlist[$field]}) ? $obj->{$fieldlist[$field]}:'').'" name="'.$fieldlist[$field].'">';
+			print '<input type="text" '.$size.'class="flat'.($class ? ' '.$class : '').'" value="'.(isset($obj->{$fieldlist[$field]}) ? $obj->{$fieldlist[$field]} : '').'" name="'.$fieldlist[$field].'">';
 			print '</td>';
 		}
 	}

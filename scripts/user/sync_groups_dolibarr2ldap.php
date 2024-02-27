@@ -61,8 +61,7 @@ print "***** ".$script_file." (".$version.") pid=".dol_getmypid()." *****\n";
 dol_syslog($script_file." launched with arg ".join(',', $argv));
 
 /*
- * if (! $conf->global->LDAP_SYNCHRO_ACTIVE)
- * {
+ * if (getDolGlobalString('LDAP_SYNCHRO_ACTIVE')) {
  * print $langs->trans("LDAPSynchronizationNotSetupInDolibarr");
  * exit(-1);
  * }
@@ -112,7 +111,6 @@ if ($resql) {
 	}
 
 	$ldap->unbind();
-	$ldap->close();
 } else {
 	dol_print_error($db);
 }

@@ -28,7 +28,6 @@
  */
 class Shipments extends DolibarrApi
 {
-
 	/**
 	 * @var array   $FIELDS     Mandatory fields, checked when create and update object
 	 */
@@ -58,10 +57,10 @@ class Shipments extends DolibarrApi
 	 *
 	 * Return an array with shipment informations
 	 *
-	 * @param       int         $id         ID of shipment
-	 * @return 	array|mixed data without useless information
+	 * @param   int         $id         ID of shipment
+	 * @return  Object					Object with cleaned properties
 	 *
-	 * @throws 	RestException
+	 * @throws	RestException
 	 */
 	public function get($id)
 	{
@@ -89,17 +88,18 @@ class Shipments extends DolibarrApi
 	 *
 	 * Get a list of shipments
 	 *
-	 * @param string	       $sortfield	        Sort field
-	 * @param string	       $sortorder	        Sort order
-	 * @param int		       $limit		        Limit for list
-	 * @param int		       $page		        Page number
-	 * @param string   	       $thirdparty_ids	    Thirdparty ids to filter shipments of (example '1' or '1,2,3') {@pattern /^[0-9,]*$/i}
+	 * @param string		   $sortfield			Sort field
+	 * @param string		   $sortorder			Sort order
+	 * @param int			   $limit				Limit for list
+	 * @param int			   $page				Page number
+	 * @param string		   $thirdparty_ids		Thirdparty ids to filter shipments of (example '1' or '1,2,3') {@pattern /^[0-9,]*$/i}
 	 * @param string           $sqlfilters          Other criteria to filter answers separated by a comma. Syntax example "(t.ref:like:'SO-%') and (t.date_creation:<:'20160101')"
+	 * @param string		   $properties			Restrict the data returned to theses properties. Ignored if empty. Comma separated list of properties names
 	 * @return  array                               Array of shipment objects
 	 *
 	 * @throws RestException
 	 */
-	public function index($sortfield = "t.rowid", $sortorder = 'ASC', $limit = 100, $page = 0, $thirdparty_ids = '', $sqlfilters = '')
+	public function index($sortfield = "t.rowid", $sortorder = 'ASC', $limit = 100, $page = 0, $thirdparty_ids = '', $sqlfilters = '', $properties = '')
 	{
 		global $db, $conf;
 
@@ -122,7 +122,7 @@ class Shipments extends DolibarrApi
 		if ((!DolibarrApiAccess::$user->rights->societe->client->voir && !$socids) || $search_sale > 0) {
 			$sql .= ", sc.fk_soc, sc.fk_user"; // We need these fields in order to filter by sale (including the case where the user can only see his prospects)
 		}
-		$sql .= " FROM ".MAIN_DB_PREFIX."expedition as t";
+		$sql .= " FROM ".MAIN_DB_PREFIX."expedition AS t LEFT JOIN ".MAIN_DB_PREFIX."expedition_extrafields AS ef ON (ef.fk_object = t.rowid)"; // Modification VMR Global Solutions to include extrafields as search parameters in the API GET call, so we will be able to filter on extrafields
 
 		if ((!DolibarrApiAccess::$user->rights->societe->client->voir && !$socids) || $search_sale > 0) {
 			$sql .= ", ".MAIN_DB_PREFIX."societe_commerciaux as sc"; // We need this table joined to the select in order to filter by sale
@@ -144,11 +144,11 @@ class Shipments extends DolibarrApi
 		}
 		// Add sql filters
 		if ($sqlfilters) {
-			if (!DolibarrApi::_checkFilters($sqlfilters)) {
-				throw new RestException(503, 'Error when validating parameter sqlfilters '.$sqlfilters);
+			$errormessage = '';
+			$sql .= forgeSQLFromUniversalSearchCriteria($sqlfilters, $errormessage);
+			if ($errormessage) {
+				throw new RestException(400, 'Error when validating parameter sqlfilters -> '.$errormessage);
 			}
-			$regexstring = '\(([^:\'\(\)]+:[^:\'\(\)]+:[^\(\)]+)\)';
-			$sql .= " AND (".preg_replace_callback('/'.$regexstring.'/', 'DolibarrApi::_forge_criteria_callback', $sqlfilters).")";
 		}
 
 		$sql .= $this->db->order($sortfield, $sortorder);
@@ -172,16 +172,14 @@ class Shipments extends DolibarrApi
 				$obj = $this->db->fetch_object($result);
 				$shipment_static = new Expedition($this->db);
 				if ($shipment_static->fetch($obj->rowid)) {
-					$obj_ret[] = $this->_cleanObjectDatas($shipment_static);
+					$obj_ret[] = $this->_filterObjectProperties($this->_cleanObjectDatas($shipment_static), $properties);
 				}
 				$i++;
 			}
 		} else {
 			throw new RestException(503, 'Error when retrieve commande list : '.$this->db->lasterror());
 		}
-		if (!count($obj_ret)) {
-			throw new RestException(404, 'No shipment found');
-		}
+
 		return $obj_ret;
 	}
 
@@ -200,6 +198,12 @@ class Shipments extends DolibarrApi
 		$result = $this->_validate($request_data);
 
 		foreach ($request_data as $field => $value) {
+			if ($field === 'caller') {
+				// Add a mention of caller so on trigger called after action, we can filter to avoid a loop if we try to sync back again whith the caller
+				$this->shipment->context['caller'] = $request_data['caller'];
+				continue;
+			}
+
 			$this->shipment->$field = $value;
 		}
 		if (isset($request_data["lines"])) {
@@ -278,8 +282,8 @@ class Shipments extends DolibarrApi
 
 		$request_data = (object) $request_data;
 
-		$request_data->desc = checkVal($request_data->desc, 'restricthtml');
-		$request_data->label = checkVal($request_data->label);
+		$request_data->desc = sanitizeVal($request_data->desc, 'restricthtml');
+		$request_data->label = sanitizeVal($request_data->label);
 
 		$updateRes = $this->shipment->addline(
 						$request_data->desc,
@@ -346,8 +350,8 @@ class Shipments extends DolibarrApi
 
 		$request_data = (object) $request_data;
 
-		$request_data->desc = checkVal($request_data->desc, 'restricthtml');
-		$request_data->label = checkVal($request_data->label);
+		$request_data->desc = sanitizeVal($request_data->desc, 'restricthtml');
+		$request_data->label = sanitizeVal($request_data->label);
 
 		$updateRes = $this->shipment->updateline(
 						$lineid,
@@ -447,6 +451,12 @@ class Shipments extends DolibarrApi
 			if ($field == 'id') {
 				continue;
 			}
+			if ($field === 'caller') {
+				// Add a mention of caller so on trigger called after action, we can filter to avoid a loop if we try to sync back again whith the caller
+				$this->shipment->context['caller'] = $request_data['caller'];
+				continue;
+			}
+
 			$this->shipment->$field = $value;
 		}
 
@@ -501,7 +511,7 @@ class Shipments extends DolibarrApi
 	 *
 	 * @url POST    {id}/validate
 	 *
-	 * @return  array
+	 * @return  object
 	 * \todo An error 403 is returned if the request has an empty body.
 	 * Error message: "Forbidden: Content type `text/plain` is not supported."
 	 * Workaround: send this in the body
@@ -530,14 +540,9 @@ class Shipments extends DolibarrApi
 		if ($result < 0) {
 			throw new RestException(500, 'Error when validating Shipment: '.$this->shipment->error);
 		}
-		$result = $this->shipment->fetch($id);
-		if (!$result) {
-			throw new RestException(404, 'Shipment not found');
-		}
 
-		if (!DolibarrApi::_checkAccessToResource('expedition', $this->shipment->id)) {
-			throw new RestException(401, 'Access not allowed for login '.DolibarrApiAccess::$user->login);
-		}
+		// Reload shipment
+		$result = $this->shipment->fetch($id);
 
 		$this->shipment->fetchObjectLinked();
 		return $this->_cleanObjectDatas($this->shipment);
@@ -558,7 +563,7 @@ class Shipments extends DolibarrApi
 	//  * @throws RestException 404
 	//  * @throws RestException 405
 	//  */
-	 /*
+	/*
 	public function setinvoiced($id)
 	{
 
@@ -626,6 +631,47 @@ class Shipments extends DolibarrApi
 	}
 	*/
 
+	/**
+	* Close a shipment (Classify it as "Delivered")
+	*
+	* @param   int     $id             Expedition ID
+	* @param   int     $notrigger      Disabled triggers
+	*
+	* @url POST    {id}/close
+	*
+	* @return  object
+	*/
+	public function close($id, $notrigger = 0)
+	{
+		if (!DolibarrApiAccess::$user->rights->expedition->creer) {
+			throw new RestException(401);
+		}
+
+		$result = $this->shipment->fetch($id);
+		if (!$result) {
+			throw new RestException(404, 'Shipment not found');
+		}
+
+		if (!DolibarrApi::_checkAccessToResource('expedition', $this->shipment->id)) {
+			throw new RestException(401, 'Access not allowed for login '.DolibarrApiAccess::$user->login);
+		}
+
+		$result = $this->shipment->setClosed();
+		if ($result == 0) {
+			throw new RestException(304, 'Error nothing done. May be object is already closed');
+		}
+		if ($result < 0) {
+			throw new RestException(500, 'Error when closing Order: '.$this->shipment->error);
+		}
+
+		// Reload shipment
+		$result = $this->shipment->fetch($id);
+
+		$this->shipment->fetchObjectLinked();
+
+		return $this->_cleanObjectDatas($this->shipment);
+	}
+
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore
 	/**
 	 * Clean sensible object datas
@@ -649,6 +695,11 @@ class Shipments extends DolibarrApi
 
 		if (!empty($object->lines) && is_array($object->lines)) {
 			foreach ($object->lines as $line) {
+				if (is_array($line->detail_batch)) {
+					foreach ($line->detail_batch as $keytmp2 => $valtmp2) {
+						unset($line->detail_batch[$keytmp2]->db);
+					}
+				}
 				unset($line->tva_tx);
 				unset($line->vat_src_code);
 				unset($line->total_ht);

@@ -78,8 +78,8 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 
 $error = 0;
 $websitekey = GETPOST('website', 'alpha');
-$pageid = GETPOST('page', 'alpha') ?GETPOST('page', 'alpha') : GETPOST('pageid', 'alpha');
-$pageref = GETPOST('pageref', 'alphanohtml') ?GETPOST('pageref', 'alphanohtml') : '';
+$pageid = GETPOST('page', 'alpha') ? GETPOST('page', 'alpha') : GETPOST('pageid', 'alpha');
+$pageref = GETPOST('pageref', 'alphanohtml') ? GETPOST('pageref', 'alphanohtml') : '';
 
 $accessallowed = 1;
 $type = '';
@@ -147,7 +147,7 @@ if (empty($pageid)) {
 }
 
 $appli = constant('DOL_APPLICATION_TITLE');
-if (!empty($conf->global->MAIN_APPLICATION_TITLE)) {
+if (getDolGlobalString('MAIN_APPLICATION_TITLE')) {
 	$appli = $conf->global->MAIN_APPLICATION_TITLE;
 }
 
@@ -169,9 +169,9 @@ if ($pageid == 'css') {   // No more used ?
 	//if (empty($dolibarr_nocache)) header('Cache-Control: max-age=3600, public, must-revalidate');
 	//else
 	header('Cache-Control: no-cache');
-	$original_file = $dolibarr_main_data_root.'/website/'.$websitekey.'/styles.css.php';
+	$original_file = $dolibarr_main_data_root.($conf->entity > 1 ? '/'.$conf->entity : '').'/website/'.$websitekey.'/styles.css.php';
 } else {
-	$original_file = $dolibarr_main_data_root.'/website/'.$websitekey.'/page'.$pageid.'.tpl.php';
+	$original_file = $dolibarr_main_data_root.($conf->entity > 1 ? '/'.$conf->entity : '').'/website/'.$websitekey.'/page'.$pageid.'.tpl.php';
 }
 
 // Find the subdirectory name as the reference
