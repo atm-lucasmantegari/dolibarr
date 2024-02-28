@@ -1703,11 +1703,11 @@ if ($resql) {
 
 		$with_margin_info = false;
 		if (isModEnabled('margin') && (
-				!empty($arrayfields['total_pa']['checked'])
-				|| !empty($arrayfields['total_margin']['checked'])
-				|| !empty($arrayfields['total_margin_rate']['checked'])
-				|| !empty($arrayfields['total_mark_rate']['checked'])
-			)
+			!empty($arrayfields['total_pa']['checked'])
+			|| !empty($arrayfields['total_margin']['checked'])
+			|| !empty($arrayfields['total_margin_rate']['checked'])
+			|| !empty($arrayfields['total_mark_rate']['checked'])
+		)
 		) {
 			$with_margin_info = true;
 		}
@@ -1797,6 +1797,8 @@ if ($resql) {
 				$multicurrency_remaintopay = -$multicurrency_remaincreditnote;
 				$multicurrency_totalpay = price2num($facturestatic->multicurrency_total_ttc - $multicurrency_remaintopay);
 			}
+
+            if($facturestatic->paye) $remaintopay = 0;
 
 			$facturestatic->alreadypaid = $paiement;
 
