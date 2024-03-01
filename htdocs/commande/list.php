@@ -886,7 +886,7 @@ if ($search_all) {
  * SPE MAINTLOG
  * PR COEUR FAITE EN V20
  */
-if($sall && getDolGlobalInt(strtoupper($object->table_element_line).'_SEARCHALL_EXTRAFIELDS_ENABLE') > 0) {
+if($search_all && getDolGlobalInt(strtoupper($object->table_element_line).'_SEARCHALL_EXTRAFIELDS_ENABLE') > 0) {
 	$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet_extrafields as efcd ON pd.rowid=efcd.fk_object';
 }
 /**
@@ -2116,8 +2116,8 @@ while ($i < $imaxinloop) {
 	$projectstatic->title = $obj->project_label;
 
 	$marginInfo = array();
-	if ($with_margin_info === true) {
-		$generic_commande->fetch_lines();
+    $generic_commande->fetch_lines();
+    if ($with_margin_info === true) {
 		$marginInfo = $formmargin->getMarginInfosArray($generic_commande);
 		$total_ht += $obj->total_ht;
 		$total_margin += $marginInfo['total_margin'];
@@ -2180,7 +2180,6 @@ while ($i < $imaxinloop) {
 
 			$total_HT_pa_product = 0;		//compteur total HT pa produits commande client
 			$TCommandQtyProducts = array(); //compteur total quantité de chaque produit dans la commande client
-
 			//compteurs commandes fournisseurs
 			if(!empty($generic_commande->linkedObjects['order_supplier'])) {
 				foreach($generic_commande->linkedObjects['order_supplier'] as $supplierorder) {
@@ -2211,7 +2210,6 @@ while ($i < $imaxinloop) {
 					$product = new Product($db);
 					$res = $product->fetch($line->fk_product);
 					$product->fetch_optionals();
-
 					//si produit lié à la ligne et pas exclu alors on ajoute sa quantité et son prix dans les compteurs
 					if($res && empty($product->array_options['options_exclude_alert'])) {
 
@@ -2233,7 +2231,7 @@ while ($i < $imaxinloop) {
 
 			//alert_qty
 			foreach($TCommandQtyProducts as $id_product=>$total_qty){
-				if($TSupplierCommandQtyProducts[$id_product] != $total_qty) {
+				if(empty($TSupplierCommandQtyProducts[$id_product]) || $TSupplierCommandQtyProducts[$id_product] != $total_qty) {
 					$alert_qty = true;
 					break;
 				}
@@ -2244,17 +2242,6 @@ while ($i < $imaxinloop) {
 			if ($generic_commande->hasDelay()) {
 				print img_picto($langs->trans("Late").' : '.$generic_commande->showDelay(), "warning");
 			}
-
-			$filename = dol_sanitizeFileName($obj->ref);
-			$filedir = $conf->commande->multidir_output[$conf->entity].'/'.dol_sanitizeFileName($obj->ref);
-			$urlsource = $_SERVER['PHP_SELF'].'?id='.$obj->rowid;
-			print $formfile->getDocumentsLink($generic_commande->element, $filename, $filedir);
-			/*DEV SPECIFIQUE MAINTLOG*/
-			//T2433 - Affichage picto
-			if($alert_qty && $alert_price){
-				print '<span class="fas fa-parachute-box" style=" color: #800000;"></span>';
-			}
-			/*———FIN DEV SPECIFIQUE MAINTLOG———*/
 
 			$filename = dol_sanitizeFileName($obj->ref);
 			$filedir = $conf->commande->multidir_output[$conf->entity].'/'.dol_sanitizeFileName($obj->ref);
