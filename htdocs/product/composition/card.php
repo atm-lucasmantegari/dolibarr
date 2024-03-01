@@ -94,106 +94,101 @@ if ($cancel) {
 	$action = '';
 }
 $parameters=array('id'=>$id, 'ref'=>$ref);
-$reshook = $hookmanager->executeHooks('doActions', parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
+$reshook = $hookmanager->executeHooks('doActions', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0) {
 	setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 }
-
 if (empty($reshook)) {
-	// Add subproduct to product
-	if ($action == 'add_prod' && ($user->hasRight('produit', 'creer') || $user->hasRight('service', 'creer'))) {
-		$error = 0;
-		$maxprod = GETPOST("max_prod", 'int');
+    // Add subproduct to product
+    if ($action == 'add_prod' && ($user->hasRight('produit', 'creer') || $user->hasRight('service', 'creer'))) {
+        $error = 0;
+        $maxprod = GETPOST("max_prod", 'int');
 
-		for ($i = 0; $i < $maxprod; $i++) {
-			$qty = price2num(GETPOST("prod_qty_" . $i, 'alpha'), 'MS');
-			if ($qty > 0) {
-				if ($object->add_sousproduit($id, GETPOST("prod_id_" . $i, 'int'), $qty, GETPOST("prod_incdec_" . $i, 'int')) > 0) {
-					//var_dump($i.' '.GETPOST("prod_id_".$i, 'int'), $qty, GETPOST("prod_incdec_".$i, 'int'));
-					$action = 'edit';
-				} else {
-					$error++;
-					$action = 're-edit';
-					if ($object->error == "isFatherOfThis") {
-						setEventMessages($langs->trans("ErrorAssociationIsFatherOfThis"), null, 'errors');
-					} else {
-						setEventMessages($object->error, $object->errors, 'errors');
-					}
-				}
-			} else {
-				if ($object->del_sousproduit($id, GETPOST("prod_id_" . $i, 'int')) > 0) {
-					$action = 'edit';
-				} else {
-					$error++;
-					$action = 're-edit';
-					setEventMessages($object->error, $object->errors, 'errors');
-				}
-			}
-		}
-
-		if (!$error) {
-			header("Location: " . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
-			exit;
-		}
-	} elseif ($action === 'save_composed_product') {
-		$TProduct = GETPOST('TProduct', 'array');
-		if (!empty($TProduct)) {
-			foreach ($TProduct as $id_product => $row) {
-				if ($row['qty'] > 0) {
-					$object->update_sousproduit($id, $id_product, $row['qty'], isset($row['incdec']) ? 1 : 0);
-				} else {
-					$object->del_sousproduit($id, $id_product);
-				}
-			}
-			setEventMessages('RecordSaved', null);
-		}
-		$action = '';
-		header("Location: " . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
-		exit;
-	}
-}
-elseif($action === 'confirm_makeproduct' && !empty($conf->global->PRODUIT_SOUSPRODUITS_MAKINGPRODUCT))
-{
-    $error = 0;
-    foreach($_REQUEST as $key => $val) {
-        if(strpos($key,'outletwarehouse') !== false || strpos($key,'qtyneeded') !== false) {
-            $tmpArr = explode('_',$key);
-            if(strpos($key,'outletwarehouse') !== false) $TOutletWarehouse[$tmpArr[1]]['fk_warehouse'] = $val;
-            if(strpos($key,'qtyneeded') !== false) $TOutletWarehouse[$tmpArr[1]]['qty'] = $val;
-        }
-    }
-    if(strpos($qtyToMake,',') !== false) $qtyToMake = price2num($qtyToMake);
-    if(!empty($id) && !empty($entryWarehouse) && !empty($TOutletWarehouse) && (is_numeric($qtyToMake) && $qtyToMake > 0)) {
-        $db->begin();
-        $mvtStock = new MouvementStock($db);
-        $mvtStock->origin = $object;
-        $res = $mvtStock->reception($user,$id,$entryWarehouse, $qtyToMake, 0, $langs->trans('MakingProductFromVirtualProduct',$object->ref)); //TO MAKE
-        if($res > 0) {
-            foreach($TOutletWarehouse as $fk_product_needed => $TInfoWarehouse) {
-                $qtyNeeded = $TInfoWarehouse['qty'] * $qtyToMake;
-                $res = $mvtStock->livraison($user, $fk_product_needed, $TInfoWarehouse['fk_warehouse'], $qtyNeeded,0 ,$langs->trans('MakingProductFromVirtualProduct',$object->ref)); //NEEDED
-                if($res <= 0) {
-                    setEventMessage($langs->trans('ErrorDuringStockMovement'),'errors');
+        for ($i = 0 ; $i < $maxprod ; $i++) {
+            $qty = price2num(GETPOST("prod_qty_" . $i, 'alpha'), 'MS');
+            if ($qty > 0) {
+                if ($object->add_sousproduit($id, GETPOST("prod_id_" . $i, 'int'), $qty, GETPOST("prod_incdec_" . $i, 'int')) > 0) {
+                    //var_dump($i.' '.GETPOST("prod_id_".$i, 'int'), $qty, GETPOST("prod_incdec_".$i, 'int'));
+                    $action = 'edit';
+                } else {
                     $error++;
+                    $action = 're-edit';
+                    if ($object->error == "isFatherOfThis") {
+                        setEventMessages($langs->trans("ErrorAssociationIsFatherOfThis"), null, 'errors');
+                    } else {
+                        setEventMessages($object->error, $object->errors, 'errors');
+                    }
+                }
+            } else {
+                if ($object->del_sousproduit($id, GETPOST("prod_id_" . $i, 'int')) > 0) {
+                    $action = 'edit';
+                } else {
+                    $error++;
+                    $action = 're-edit';
+                    setEventMessages($object->error, $object->errors, 'errors');
                 }
             }
+        }
+
+        if (! $error) {
+            header("Location: " . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+            exit;
+        }
+    } elseif ($action === 'save_composed_product') {
+        $TProduct = GETPOST('TProduct', 'array');
+        if (! empty($TProduct)) {
+            foreach ($TProduct as $id_product => $row) {
+                if ($row['qty'] > 0) {
+                    $object->update_sousproduit($id, $id_product, $row['qty'], isset($row['incdec']) ? 1 : 0);
+                } else {
+                    $object->del_sousproduit($id, $id_product);
+                }
+            }
+            setEventMessages('RecordSaved', null);
+        }
+        $action = '';
+        header("Location: " . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+        exit;
+    } elseif ($action === 'confirm_makeproduct' && ! empty($conf->global->PRODUIT_SOUSPRODUITS_MAKINGPRODUCT)) {
+        $error = 0;
+        foreach ($_REQUEST as $key => $val) {
+            if (strpos($key, 'outletwarehouse') !== false || strpos($key, 'qtyneeded') !== false) {
+                $tmpArr = explode('_', $key);
+                if (strpos($key, 'outletwarehouse') !== false) $TOutletWarehouse[$tmpArr[1]]['fk_warehouse'] = $val;
+                if (strpos($key, 'qtyneeded') !== false) $TOutletWarehouse[$tmpArr[1]]['qty'] = $val;
+            }
+        }
+        if (strpos($qtyToMake, ',') !== false) $qtyToMake = price2num($qtyToMake);
+        if (! empty($id) && ! empty($entryWarehouse) && ! empty($TOutletWarehouse) && (is_numeric($qtyToMake) && $qtyToMake > 0)) {
+            $db->begin();
+            $mvtStock = new MouvementStock($db);
+            $mvtStock->origin = $object;
+            $res = $mvtStock->reception($user, $id, $entryWarehouse, $qtyToMake, 0, $langs->trans('MakingProductFromVirtualProduct', $object->ref)); //TO MAKE
+            if ($res > 0) {
+                foreach ($TOutletWarehouse as $fk_product_needed => $TInfoWarehouse) {
+                    $qtyNeeded = $TInfoWarehouse['qty'] * $qtyToMake;
+                    $res = $mvtStock->livraison($user, $fk_product_needed, $TInfoWarehouse['fk_warehouse'], $qtyNeeded, 0, $langs->trans('MakingProductFromVirtualProduct', $object->ref)); //NEEDED
+                    if ($res <= 0) {
+                        setEventMessage($langs->trans('ErrorDuringStockMovement'), 'errors');
+                        $error++;
+                    }
+                }
+            } else {
+                setEventMessage($langs->trans('ErrorDuringStockMovement'), 'errors');
+                $error++;
+            }
         } else {
-            setEventMessage($langs->trans('ErrorDuringStockMovement'),'errors');
+            setEventMessage($langs->trans('DolibarrHasDetectedError'), 'errors');
             $error++;
         }
-    }
-    else {
-        setEventMessage($langs->trans('DolibarrHasDetectedError'), 'errors');
-        $error++;
-    }
-    if (! $error)
-    {
-        $db->commit();
-        setEventMessage($langs->trans('StockMovementRecorded'), 'mesgs');
-        header("Location: ".$_SERVER["PHP_SELF"].'?id='.$object->id);
-        exit;
-    } else {
-        $db->rollback();
+        if (! $error) {
+            $db->commit();
+            setEventMessage($langs->trans('StockMovementRecorded'), 'mesgs');
+            header("Location: " . $_SERVER["PHP_SELF"] . '?id=' . $object->id);
+            exit;
+        } else {
+            $db->rollback();
+        }
     }
 }
 
@@ -203,7 +198,7 @@ elseif($action === 'confirm_makeproduct' && !empty($conf->global->PRODUIT_SOUSPR
  */
 
 $form = new Form($db);
-$formproduct = new FormProduct($db);
+$formProduct = new FormProduct($db);
 $product_fourn = new ProductFournisseur($db);
 $productstatic = new Product($db);
 
@@ -385,15 +380,24 @@ if ($id > 0 || !empty($ref)) {
             $TConfirmParams['tomake']['name'] = "qty_to_make";
 
             $TConfirmParams['finishedtitle']['type'] = 'onecolumn';
-            $TConfirmParams['finishedtitle']['value'] = '<div align="center" width="100%"><b>'.$langs->trans('ManufacturedProductWarehouse').'</b></div>';
-
+            $TConfirmParams['finishedtitle']['value'] = '<div id="finishedtitle" align="center" width="100%"><b>'.$langs->trans('ManufacturedProductWarehouse').'</b></div>';
+            //TODO voir avec thib
+            ?>
+            <script type="text/javascript">
+                $(document).ready(function() {
+                   let stockWarehouse = $('#entrywarehouse').closest('.tagtr');
+                   let finishedTitle = $('#finishedtitle').closest('.margintoponly').addClass('tagtr');
+                   $(finishedTitle).insertBefore(stockWarehouse);
+                });
+            </script>
+            <?php
             $TConfirmParams['target']['label'] = $langs->trans('WarehouseTarget').' :';
             $TConfirmParams['target']['type'] = "other";
             $TConfirmParams['target']['name'] = "entrywarehouse";
             $TConfirmParams['target']['value'] = $formProduct->selectWarehouses($fk_default_warehouse, 'entrywarehouse');
 
             $TConfirmParams['componenttitle']['type'] = 'onecolumn';
-            $TConfirmParams['componenttitle']['value'] = '<div align="center" width="100%"><b>'.$langs->trans('ComponentWarehouses').'</b></div>';
+            $TConfirmParams['componenttitle']['value'] = '<div id="componenttitle" align="center" width="100%"><b>'.$langs->trans('ComponentWarehouses').'</b></div>';
             foreach($prods_arbo as $child) {
             	$child_fk_default_warehouse = 0;
             	$childProd = new Product($db);
@@ -408,6 +412,7 @@ if ($id > 0 || !empty($ref)) {
                 $TConfirmParams['qtyneeded'.$fk_child]['type'] = "hidden";
                 $TConfirmParams['qtyneeded'.$fk_child]['value'] = $child['nb'];
             }
+
             print $form->formconfirm($_SERVER["PHP_SELF"], $langs->trans('MakeProduct'), '', 'confirm_makeproduct', $TConfirmParams, '', 'action-makeproduct', 'auto');
         }
 

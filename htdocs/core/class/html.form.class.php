@@ -5373,6 +5373,7 @@ class Form
 					}
 				}
 			}
+
 			$more .= '</div>' . "\n";
 			$more .= $moreonecolumn;
 		}
