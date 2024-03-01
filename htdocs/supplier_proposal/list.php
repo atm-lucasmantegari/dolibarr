@@ -1013,7 +1013,6 @@ if ($resql) {
 	}
 	//Spé
 	if (! empty($arrayfields['propal.ref']['checked']))   print_liste_field_titre($arrayfields['propal.ref']['label'], $_SERVER["PHP_SELF"], "propal.ref", "", $param, '', $sortfield, $sortorder, 'center ');
-	print_liste_field_titre($selectedfields, $_SERVER["PHP_SELF"], "", '', '', '', $sortfield, $sortorder, 'center maxwidthsearch ');
 
 	// Action
 	if (!getDolGlobalString('MAIN_CHECKBOX_LEFT_COLUMN')) {

@@ -2742,8 +2742,10 @@ class Product extends CommonObject
 						$result = $this->db->fetch_array($resql);
 
 						// Price by quantity
-						$this->prices_by_qty[0] = $result["price_by_qty"];
-						$this->prices_by_qty_id[0] = $result["rowid"];
+                        if(empty($this->prices_by_qty)) $this->prices_by_qty = [];
+                        if(empty($this->prices_by_qty_id)) $this->prices_by_qty_id = [];
+						$this->prices_by_qty[0] = $result["price_by_qty"] ?? null;
+						$this->prices_by_qty_id[0] = $result["rowid"] ?? null;
 						// Récuperation de la liste des prix selon qty si flag positionné
 						if ($this->prices_by_qty[0] == 1) {
 							$sql = "SELECT rowid,price, unitprice, quantity, remise_percent, remise, remise, price_base_type";

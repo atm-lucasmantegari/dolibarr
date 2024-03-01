@@ -213,7 +213,7 @@ if (getDolGlobalString('PRODUCT_QUICKSEARCH_ON_FIELDS')) {
 }
 
 //global search on extrafields
-$extralabels = $extrafields->attribute_label;
+$extralabels = $extrafields->attributes[$object->table_element]['label'];
 if(!empty($conf->global->PRODUIT_GLOBAL_SEARCH_ON_EXTRAFIELD) && !empty($extralabels)) {
     foreach($extralabels as $codeExtra => $labelExtra) {
         $TExtraTypeNotHandled=array(
@@ -226,7 +226,7 @@ if(!empty($conf->global->PRODUIT_GLOBAL_SEARCH_ON_EXTRAFIELD) && !empty($extrala
             'link',
             'separate',
         );
-        if(!in_array($extrafields->attribute_type[$codeExtra], $TExtraTypeNotHandled)) $fieldstosearchall['ef.' . $codeExtra] = $labelExtra;
+        if(!in_array($extrafields->attributes[$object->table_element]['type'][$codeExtra], $TExtraTypeNotHandled)) $fieldstosearchall['ef.' . $codeExtra] = $labelExtra;
 	}
 }
 
