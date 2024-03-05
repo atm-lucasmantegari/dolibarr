@@ -639,17 +639,16 @@ if (count($amount)) {
 			$linkname = $langs->trans("PaymentsNotLinkedToInvoice");
 		}
 		print '<td class="tdoverflowmax150">'.$linkname."</td>\n";
-
 		print '<td>';
-		print $address_pays($address_zip[$key]);
+		print $address_zip[$key];
 		print '</td>';
 
 		print '<td class="tdoverflowmax150" title="'.dol_escape_htmltag($address_town[$key]).'">';
-		print $address_pays($address_town[$key]);
+		print $address_town[$key];
 		print '</td>';
 
 		print '<td class="tdoverflowmax150" title="'.dol_escape_htmltag($address_pays[$key]).'">';
-		print $address_pays($address_pays[$key]);
+		print $address_pays[$key];
 		print '</td>';
 
 		// Amount w/o VAT
@@ -734,6 +733,7 @@ if (count($amount)) {
         if($key < $maxQtyGraph)  $TData[$key] = $data;
         else {
             $TData[$maxQtyGraph][0] = 'Autres';
+            if(empty($TData[$maxQtyGraph][1])) $TData[$maxQtyGraph][1] = 0;
             $TData[$maxQtyGraph][1] += $data[1];
         }
     }
