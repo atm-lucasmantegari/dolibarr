@@ -49,7 +49,7 @@ if ($action == 'setnote_public' && !empty($permissionnote) && !GETPOST('cancel',
 				$newlang = GETPOST('lang_id', 'aZ09');
 			}
 			if (getDolGlobalInt('MAIN_MULTILANGS') && empty($newlang)) {
-				$newlang = $object->thirdparty->default_lang;
+				$newlang = $object->thirdparty->default_lang ?? null;
 			}
 			if (!empty($newlang)) {
 				$outputlangs = new Translate("", $conf);
