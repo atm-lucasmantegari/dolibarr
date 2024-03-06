@@ -379,25 +379,11 @@ if ($id > 0 || !empty($ref)) {
             $TConfirmParams['tomake']['type'] = "text";
             $TConfirmParams['tomake']['name'] = "qty_to_make";
 
-            $TConfirmParams['finishedtitle']['type'] = 'onecolumn';
-            $TConfirmParams['finishedtitle']['value'] = '<div id="finishedtitle" align="center" width="100%"><b>'.$langs->trans('ManufacturedProductWarehouse').'</b></div>';
-            //TODO voir avec thib
-            ?>
-            <script type="text/javascript">
-                $(document).ready(function() {
-                   let stockWarehouse = $('#entrywarehouse').closest('.tagtr');
-                   let finishedTitle = $('#finishedtitle').closest('.margintoponly').addClass('tagtr');
-                   $(finishedTitle).insertBefore(stockWarehouse);
-                });
-            </script>
-            <?php
             $TConfirmParams['target']['label'] = $langs->trans('WarehouseTarget').' :';
             $TConfirmParams['target']['type'] = "other";
             $TConfirmParams['target']['name'] = "entrywarehouse";
             $TConfirmParams['target']['value'] = $formProduct->selectWarehouses($fk_default_warehouse, 'entrywarehouse');
 
-            $TConfirmParams['componenttitle']['type'] = 'onecolumn';
-            $TConfirmParams['componenttitle']['value'] = '<div id="componenttitle" align="center" width="100%"><b>'.$langs->trans('ComponentWarehouses').'</b></div>';
             foreach($prods_arbo as $child) {
             	$child_fk_default_warehouse = 0;
             	$childProd = new Product($db);
