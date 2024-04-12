@@ -361,8 +361,7 @@ $sql .= $hookmanager->resPrint;
 
 $sql .= ' FROM '.MAIN_DB_PREFIX.'product as p';
 $sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'product_stock as s ON p.rowid = s.fk_product';
-$list_warehouse = (empty($listofqualifiedwarehousesid) ? '0' : $listofqualifiedwarehousesid);
-$sql .= ' AND s.fk_entrepot  IN ('.$db->sanitize($list_warehouse) .')';
+$sql .= ' AND s.fk_entrepot  IN ('.$db->sanitize($fk_entrepot) .')';
 
 //$sql .= ' LEFT JOIN '.MAIN_DB_PREFIX.'entrepot AS ent ON s.fk_entrepot = ent.rowid AND ent.entity IN('.getEntity('stock').')';
 if (!empty($conf->global->STOCK_ALLOW_ADD_LIMIT_STOCK_BY_WAREHOUSE) && $fk_entrepot > 0) {
@@ -514,6 +513,8 @@ if ($usevirtualstock) {
 		$sql .= " (".$sqlalertstock." >= 0 AND (".$sqlalertstock." > SUM(".$db->ifsql("s.reel IS NULL", "0", "s.reel").')))';
 	}
 	$sql .= ')';
+	$sql .= " AND (";
+	$sql .= " pse.desiredstock > 0)";
 
 	if ($salert == 'on') {	// Option to see when stock is lower than alert
 		$sql .= " AND (";
@@ -834,7 +835,9 @@ while ($i < ($limit ? min($num, $limit) : $num)) {
 			//TODO $stockwarehouse = $prod->stock_warehouse[$fk_entrepot]->;
 		} else {
 			$stock = $prod->stock_reel;
-			$stockwarehouse = $prod->stock_warehouse[$fk_entrepot]->real;
+			if (!empty($prod->stock_warehouse[$fk_entrepot])){
+				$stockwarehouse = $prod->stock_warehouse[$fk_entrepot]->real;
+			}
 		}
 
 		// Force call prod->load_stats_xxx to choose status to count (otherwise it is loaded by load_stock function)

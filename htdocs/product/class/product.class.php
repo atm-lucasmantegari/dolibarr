@@ -5742,7 +5742,7 @@ class Product extends CommonObject
 		$parameters = array('id'=>$this->id, 'includedraftpoforvirtual' => $includedraftpoforvirtual);
 		// Note that $action and $object may have been modified by some hooks
 		$reshook = $hookmanager->executeHooks('loadvirtualstock', $parameters, $this, $action);
-		if ($reshook > 0) {
+		if (!empty($hookmanager->resArray['stock_theorique']) && $reshook > 0) {
 			$this->stock_theorique = $hookmanager->resArray['stock_theorique'];
 		}
 

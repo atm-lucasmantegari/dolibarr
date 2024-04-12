@@ -3835,7 +3835,7 @@ class Commande extends CommonOrder
 			$url = DOL_URL_ROOT.'/commande/card.php?id='.$this->id;
 		}
 
-		if (!$user->rights->commande->lire) {
+		if (!empty($user->rights->commande->lire)) {
 			$option = 'nolink';
 		}
 

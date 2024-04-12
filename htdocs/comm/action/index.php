@@ -1292,9 +1292,9 @@ if (count($listofextcals)) {
 					$event->datep = $datestart + $usertime;
 					$event->datef = $dateend + $usertime;
 
-					if ($icalevent['SUMMARY']) {
+					if (!empty($icalevent['SUMMARY'])) {
 						$event->label = dol_string_nohtmltag($icalevent['SUMMARY']);
-					} elseif ($icalevent['DESCRIPTION']) {
+					} elseif (!empty($icalevent['DESCRIPTION'])) {
 						$event->label = dol_nl2br(dol_string_nohtmltag($icalevent['DESCRIPTION']), 1);
 					} else {
 						$event->label = $langs->trans("ExtSiteNoLabel");
