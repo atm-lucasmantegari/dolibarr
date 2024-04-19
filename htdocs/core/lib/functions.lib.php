@@ -978,6 +978,9 @@ function sanitizeVal($out = '', $check = 'alphanohtml', $filter = null, $options
 			}
 			break;
 		case 'intcomma':
+			if (is_array($out)) {
+				$out = implode(',', $out);
+			}
 			if (preg_match('/[^0-9,-]+/i', $out)) {
 				$out = '';
 			}
@@ -1635,7 +1638,7 @@ function dolPrintLabel($s)
 
 /**
  * Return a string ready to be output on HTML page
- * To use text inside an attribute, you can simply use dol_escape_htmltag()
+ * To use text inside an attribute, you can simply use dolPrintHTMLForAttribute() or dol_escape_htmltag()
  *
  * @param	string	$s				String to print
  * @param	int		$allowiframe	Allow iframe tags
@@ -9738,6 +9741,7 @@ function dol_eval($s, $returnvalue = 0, $hideerrors = 1, $onlysimplestring = '1'
 		$forbiddenphpfunctions = array_merge($forbiddenphpfunctions, array("fopen", "file_put_contents", "fputs", "fputscsv", "fwrite", "fpassthru", "require", "include", "mkdir", "rmdir", "symlink", "touch", "unlink", "umask"));
 		$forbiddenphpfunctions = array_merge($forbiddenphpfunctions, array("get_defined_functions", "get_defined_vars", "get_defined_constants", "get_declared_classes"));
 		$forbiddenphpfunctions = array_merge($forbiddenphpfunctions, array("function", "call_user_func"));
+		$forbiddenphpfunctions = array_merge($forbiddenphpfunctions, array("require", "include", "require_once", "include_once"));
 		$forbiddenphpfunctions = array_merge($forbiddenphpfunctions, array("eval", "create_function", "assert", "mb_ereg_replace")); // function with eval capabilities
 
 		$forbiddenphpmethods = array('invoke', 'invokeArgs');	// Method of ReflectionFunction to execute a function
@@ -10188,6 +10192,8 @@ function complete_head_from_modules($conf, $langs, $object, &$head, &$h, $type, 
 						$newtab[1] = $label;
 						$newtab[2] = str_replace('+', '', $values[1]);
 						$h++;
+					} else {
+						continue;
 					}
 				} elseif (count($values) == 5) {       // case deprecated
 					dol_syslog('Passing 5 values in tabs module_parts is deprecated. Please update to 6 with permissions.', LOG_WARNING);

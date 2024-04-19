@@ -1300,9 +1300,9 @@ if ($id > 0 || !empty($ref)) {
 				// Warehouse
 				print '<td class="tdoverflowmax150">';
 				if ($action == 'editline' && $lineid == $objp->dispatchlineid) {
-					if (count($listwarehouses) > 1) {
+					if (!empty($listwarehouses) && count($listwarehouses) > 1) {
 						print $formproduct->selectWarehouses(GETPOST("fk_entrepot") ? GETPOST("fk_entrepot") : ($objp->warehouse_id ? $objp->warehouse_id : ''), "fk_entrepot", '', 1, 0, $objp->fk_product, '', 1, 1, null, 'csswarehouse');
-					} elseif (count($listwarehouses) == 1) {
+					} elseif (!empty($listwarehouses) && count($listwarehouses) == 1) {
 						print $formproduct->selectWarehouses(GETPOST("fk_entrepot") ? GETPOST("fk_entrepot") : ($objp->warehouse_id ? $objp->warehouse_id : ''), "fk_entrepot", '', 0, 0, $objp->fk_product, '', 1, 1, null, 'csswarehouse');
 					} else {
 						$langs->load("errors");

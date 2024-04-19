@@ -475,6 +475,16 @@ abstract class CommonObject
 	public $multicurrency_total_ttc;
 
 	/**
+	 * @var float Multicurrency total localta1
+	 */
+	public $multicurrency_total_localtax1;	// not in database
+
+	/**
+	 * @var float Multicurrency total localtax2
+	 */
+	public $multicurrency_total_localtax2;	// not in database
+
+	/**
 	 * @var string
 	 * @see SetDocModel()
 	 */
@@ -7330,7 +7340,7 @@ abstract class CommonObject
 					$isDependList = 1;
 				}
 				$out .= (!empty($parent) ? ' parent="'.$parent.'"' : '');
-				$out .= '>'.$valb.'</option>';
+				$out .= '>'.$langs->trans($valb).'</option>';
 			}
 			$out .= '</select>';
 		} elseif ($type == 'sellist') {
@@ -7954,7 +7964,7 @@ abstract class CommonObject
 		} elseif ($type == 'select') {
 			$value = isset($param['options'][$value]) ? $param['options'][$value] : '';
 			if (strpos($value, "|") !== false) {
-				$value = explode('|', $value)[0];
+				$value = $langs->trans(explode('|', $value)[0]);
 			}
 		} elseif ($type == 'sellist') {
 			$param_list = array_keys($param['options']);
