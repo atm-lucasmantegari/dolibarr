@@ -128,7 +128,7 @@ $search_date_modif_end = dol_mktime(23, 59, 59, $search_date_modif_endmonth, $se
 $type = GETPOST('type', 'alpha');
 $place = GETPOST('place', 'aZ09') ? GETPOST('place', 'aZ09') : '0'; // $place is string id of table for Bar or Restaurant
 
-$diroutputmassaction = $conf->societe->dir_output.'/temp/massgeneration/'.$user->id;
+q$diroutputmassaction = $conf->societe->dir_output.'/temp/massgeneration/'.$user->id;
 
 // Load variable for pagination
 $limit = GETPOST('limit', 'int') ? GETPOST('limit', 'int') : $conf->liste_limit;
@@ -640,9 +640,9 @@ if (!empty($searchCategorySupplierList)) {
 		}
 	}
 }
-if ($search_all) {
-	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
-}
+
+$sqlTempLength = strlen($sql);
+
 if (strlen($search_cti)) {
 	$sql .= natural_search('s.phone', $search_cti);
 }
@@ -736,9 +736,6 @@ if ($search_type > 0 && in_array($search_type, array('4'))) {
 if ($search_type == '0') {
 	$sql .= " AND s.client = 0 AND s.fournisseur = 0";
 }
-if ($search_status != '' && $search_status >= 0) {
-	$sql .= natural_search("s.status", $search_status, 2);
-}
 if (isModEnabled('barcode') && $search_barcode) {
 	$sql .= natural_search("s.barcode", $search_barcode);
 }
@@ -777,6 +774,15 @@ if ($search_date_modif_end) {
 	$sql .= " AND s.tms <= '".$db->idate($search_date_modif_end)."'";
 }
 
+if ($search_all && $sqlTempLength == strlen($sql)) {
+	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
+} else {
+	$search_all = '';
+}
+
+if ($search_status != '' && $search_status >= 0) {
+	$sql .= natural_search("s.status", $search_status, 2);
+}
 // Add where from extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_sql.tpl.php';
 // Add where from hooks
