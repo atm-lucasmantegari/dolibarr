@@ -876,9 +876,9 @@ if ($limit > 0 && $limit != $conf->liste_limit) {
 if ($optioncss != '') {
 	$param .= '&optioncss='.urlencode($optioncss);
 }
-if ($search_all != '') {
-	$param = "&search_all=".urlencode($search_all);
-}
+//if ($search_all != '') {
+//	$param = "&search_all=".urlencode($search_all);
+//}
 if ($search_categ_cus > 0) {
 	$param .= '&search_categ_cus='.urlencode($search_categ_cus);
 }
@@ -1161,7 +1161,14 @@ $topicmail = "Information";
 $modelmail = "thirdparty";
 $objecttmp = new Societe($db);
 $trackid = 'thi'.$object->id;
+
+
+// FIX DA024807
+$tmp = $search_all;
+$search_all = '';
 include DOL_DOCUMENT_ROOT.'/core/tpl/massactions_pre.tpl.php';
+$search_all = $tmp;
+// END of FIX
 
 if ($search_all) {
 	$setupstring = '';
