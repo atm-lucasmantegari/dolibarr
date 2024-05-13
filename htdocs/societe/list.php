@@ -641,8 +641,9 @@ if (!empty($searchCategorySupplierList)) {
 	}
 }
 
-$sqlTempLength = strlen($sql);
-
+if ($search_all) {
+	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
+}
 if (strlen($search_cti)) {
 	$sql .= natural_search('s.phone', $search_cti);
 }
@@ -773,13 +774,6 @@ if ($search_date_modif_start) {
 if ($search_date_modif_end) {
 	$sql .= " AND s.tms <= '".$db->idate($search_date_modif_end)."'";
 }
-
-if ($search_all && $sqlTempLength == strlen($sql)) {
-	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
-} else {
-	$search_all = '';
-}
-
 if ($search_status != '' && $search_status >= 0) {
 	$sql .= natural_search("s.status", $search_status, 2);
 }
