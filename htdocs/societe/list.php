@@ -640,7 +640,6 @@ if (!empty($searchCategorySupplierList)) {
 		}
 	}
 }
-
 if ($search_all) {
 	$sql .= natural_search(array_keys($fieldstosearchall), $search_all);
 }
@@ -737,6 +736,9 @@ if ($search_type > 0 && in_array($search_type, array('4'))) {
 if ($search_type == '0') {
 	$sql .= " AND s.client = 0 AND s.fournisseur = 0";
 }
+if ($search_status != '' && $search_status >= 0) {
+	$sql .= natural_search("s.status", $search_status, 2);
+}
 if (isModEnabled('barcode') && $search_barcode) {
 	$sql .= natural_search("s.barcode", $search_barcode);
 }
@@ -773,9 +775,6 @@ if ($search_date_modif_start) {
 }
 if ($search_date_modif_end) {
 	$sql .= " AND s.tms <= '".$db->idate($search_date_modif_end)."'";
-}
-if ($search_status != '' && $search_status >= 0) {
-	$sql .= natural_search("s.status", $search_status, 2);
 }
 // Add where from extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_sql.tpl.php';
