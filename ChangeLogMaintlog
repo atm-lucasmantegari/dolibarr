@@ -1,3 +1,8 @@
+# CHANGELOG 19.0 MAINTLOG FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
+
+* 13/05/24 *
+- NEW : Backport de la [PR Standard](https://github.com/Dolibarr/dolibarr/pull/29629) pour ajouter une conf cachée **MAIN_REMOVE_DROPDOWN_CREATE_BUTTONS_ON_ORDER**, pour afficher l'ancienne version des boutons de création
+
 # CHANGELOG 14.0 MAINTLOG FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
 * 03/01/24 *
