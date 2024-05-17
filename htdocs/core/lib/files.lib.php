@@ -2869,7 +2869,7 @@ function dol_check_secure_access_document($modulepart, $original_file, $entity, 
 		$sqlprotectagainstexternals = "SELECT fk_soc as fk_soc FROM ".MAIN_DB_PREFIX."paiementfournisseur WHERE ref='".$db->escape($refname)."' AND entity=".$conf->entity;
 
 		/****************************/
-		/* A retirer lors du passage en V20*/
+		/* BACKPORT : A retirer lors du passage en V20*/
 	} elseif ($modulepart == 'payment') {
 		// Wrapping pour les rapport de paiements
 		if ($fuser->rights->facture->{$lire} || preg_match('/^specimen/i', $original_file)) {

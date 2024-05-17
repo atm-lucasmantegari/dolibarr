@@ -1,7 +1,7 @@
 <?php
 
 /****************************/
-/* document.php a retirer lors du passage en V20*/
+/* BACKPORT : document.php a retirer lors du passage en V20*/
 /****************************/
 
 

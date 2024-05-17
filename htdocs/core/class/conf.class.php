@@ -217,7 +217,7 @@ class Conf
 		$this->fournisseur = new stdClass();
 
 		/****************************/
-		/* A retirer lors du passage en V20*/
+		/* BACKPORT : A retirer lors du passage en V20*/
 		$this->compta = new stdClass();
 		/****************************/
 
@@ -552,7 +552,7 @@ class Conf
 
 
 			/****************************/
-			/* A retirer lors du passage en V20*/
+			/*  BACKPORT : A retirer lors du passage en V20*/
 			// Module compta
 			$this->compta->payment = new stdClass();
 			$this->compta->payment->dir_output				= $rootfordata."/compta/payment";

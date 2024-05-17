@@ -30,7 +30,7 @@
 function payment_prepare_head(Paiement $object)
 {
 	/****************************/
-	/* $db a retirer lors du passage en V20*/
+	/* BACKPORT : $db a retirer lors du passage en V20*/
 	/****************************/
 	global $langs, $conf, $db;
 
@@ -54,7 +54,7 @@ function payment_prepare_head(Paiement $object)
 	$h++;
 
 	/****************************/
-	/* A retirer lors du passage en V20*/
+	/* BACKPORT : A retirer lors du passage en V20*/
 	require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 	require_once DOL_DOCUMENT_ROOT.'/core/class/link.class.php';
 	$upload_dir = $conf->compta->payment->dir_output.'/'.$object->ref;
