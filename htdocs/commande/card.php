@@ -3018,6 +3018,7 @@ if ($action == 'create' && $usercancreate) {
 				 }
 				 }*/
 
+				// ### BACKPORT PR 29629: https://github.com/Dolibarr/dolibarr/pull/29629 ###
 				$actionButtonsParameters = [
 					"areDropdownButtons"	=> !getDolGlobalInt("MAIN_REMOVE_DROPDOWN_CREATE_BUTTONS_ON_ORDER")
 				];
@@ -3027,6 +3028,7 @@ if ($action == 'create' && $usercancreate) {
 				} else {
 					print dolGetButtonAction($langs->trans("ErrorObjectMustHaveLinesToBeValidated", $object->ref), $langs->trans("Create"), 'default', $arrayforbutaction, $object->id, 0, $actionButtonsParameters);
 				}
+				// ### END BACKPORT ###
 
 				// Set to shipped
 				if (($object->statut == Commande::STATUS_VALIDATED || $object->statut == Commande::STATUS_SHIPMENTONPROCESS) && $usercanclose) {

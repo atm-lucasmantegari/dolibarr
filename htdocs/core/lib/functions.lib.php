@@ -11556,6 +11556,7 @@ function dolGetButtonAction($label, $text = '', $actionType = 'default', $url = 
 	if (is_array($url)) {
 		$out = '';
 
+		// ### BACKPORT PR 29629: https://github.com/Dolibarr/dolibarr/pull/29629 ###
 		if (isset($params["areDropdownButtons"]) && $params["areDropdownButtons"] === false) {
 			foreach ($url as $button) {
 				if (!empty($button['lang'])) {
@@ -11573,6 +11574,7 @@ function dolGetButtonAction($label, $text = '', $actionType = 'default', $url = 
 			}
 			return $out;
 		}
+		// ### END BACKPORT ###
 
 		if (count($url) > 1) {
 			$out .= '<div class="dropdown inline-block dropdown-holder">';
