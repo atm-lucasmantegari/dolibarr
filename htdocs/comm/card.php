@@ -1211,7 +1211,9 @@ if ($object->id > 0) {
 				// print $formfile->getDocumentsLink($contrat->element, $filename, $filedir);
 				print $late;
 				print "</td>\n";
-				print '<td class="nowrap">'.dol_trunc($objp->refsup, 12)."</td>\n";
+				print '<td class="nowrap">';
+				print dol_trunc(strtolower(get_class($object)) == strtolower(Client::class) ?  $objp->refcus : $objp->refsup, 12);
+				print "</td>\n";
 				//print '<td class="right" width="80px"><span title="'.$langs->trans("DateCreation").'">'.dol_print_date($db->jdate($objp->dc), 'day')."</span></td>\n";
 				print '<td class="right" width="80px"><span title="'.$langs->trans("DateContract").'">'.dol_print_date($db->jdate($objp->dcon), 'day')."</span></td>\n";
 				print '<td width="20">&nbsp;</td>';
@@ -1423,7 +1425,7 @@ if ($object->id > 0) {
 	 *   Latest invoices
 	 */
 	if (isModEnabled('facture') && $user->hasRight('facture', 'lire')) {
-		$sql = 'SELECT f.rowid as facid, f.ref, f.type';
+		$sql = 'SELECT f.rowid as facid, f.ref, f.type, f.ref_client';
 		$sql .= ', f.total_ht';
 		$sql .= ', f.total_tva';
 		$sql .= ', f.total_ttc';
@@ -1453,6 +1455,9 @@ if ($object->id > 0) {
 				if (getDolGlobalString('MAIN_SHOW_PRICE_WITH_TAX_IN_SUMMARIES')) {
 					$colspan++;
 				}
+				if (getDolGlobalString('MAIN_SHOW_REF_CUSTOMER_INVOICES')) {
+					$colspan++;
+				}
 				print '<td colspan="'.$colspan.'">';
 				print '<table class="centpercent nobordernopadding"><tr><td>'.$langs->trans("LastCustomersBills", ($num <= $MAXLIST ? "" : $MAXLIST)).'</td><td class="right"><a class="notasortlink" href="'.DOL_URL_ROOT.'/compta/facture/list.php?socid='.$object->id.'"><span class="hideonsmartphone">'.$langs->trans("AllBills").'</span><span class="badge marginleftonlyshort">'.$num.'</span></a></td>';
 				print '<td width="20px" class="right"><a href="'.DOL_URL_ROOT.'/compta/facture/stats/index.php?socid='.$object->id.'">'.img_picto($langs->trans("Statistics"), 'stats').'</a></td>';
@@ -1467,6 +1472,7 @@ if ($object->id > 0) {
 
 				$facturestatic->id = $objp->facid;
 				$facturestatic->ref = $objp->ref;
+				$facturestatic->ref_client = $objp->ref_client;
 				$facturestatic->type = $objp->type;
 				$facturestatic->total_ht = $objp->total_ht;
 				$facturestatic->total_tva = $objp->total_tva;
@@ -1512,6 +1518,11 @@ if ($object->id > 0) {
 				// $urlsource = '/compta/facture/card.php?id='.$objp->cid;
 				//print $formfile->getDocumentsLink($facturestatic->element, $filename, $filedir);
 				print '</td>';
+				if (getDolGlobalString('MAIN_SHOW_REF_CUSTOMER_INVOICES')) {
+					print '<td class="left nowraponall">';
+					print $objp->ref_client;
+					print '</td>';
+				}
 				if ($objp->df > 0) {
 					print '<td width="80px" title="'.dol_escape_htmltag($langs->trans('DateInvoice')).'">'.dol_print_date($db->jdate($objp->df), 'day').'</td>';
 				} else {
