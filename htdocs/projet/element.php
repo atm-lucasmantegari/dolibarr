@@ -699,7 +699,7 @@ $resHook = $hookmanager->executeHooks('completeListOfReferent', $parameters, $ob
 
 if (!empty($hookmanager->resArray)) {
 	$listofreferent = array_merge($listofreferent, $hookmanager->resArray);
-}elseif ($resHook > 0 && !empty($hookmanager->resPrint)) {
+} elseif ($resHook > 0 && !empty($hookmanager->resPrint)) {
 	$listofreferent = $hookmanager->resPrint;
 }
 
