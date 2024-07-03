@@ -69,6 +69,7 @@ $cancel 	= GETPOST('cancel', 'alpha');
 $backtopage = GETPOST('backtopage', 'alpha');
 $confirm 	= GETPOST('confirm');
 $socid 		= GETPOST('socid', 'int') ? GETPOST('socid', 'int') : GETPOST('id', 'int');
+$selectedfields = GETPOST('selectedfields', 'alpha');
 
 if ($user->socid) {
 	$socid = $user->socid;
@@ -182,6 +183,8 @@ if ($action != 'presend') {
 	// Contacts list
 	if (!getDolGlobalString('SOCIETE_DISABLE_CONTACTS')) {
 		$result = show_contacts($conf, $langs, $db, $object, $_SERVER["PHP_SELF"].'?socid='.$object->id, 1);
+		$showuserlogin = in_array('u.user', explode(',', $selectedfields)) ? 1 : 0;
+		$result = show_contacts($conf, $langs, $db, $object, $_SERVER["PHP_SELF"].'?socid='.$object->id, $showuserlogin);
 	}
 }
 
