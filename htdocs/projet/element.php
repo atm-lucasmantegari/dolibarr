@@ -723,8 +723,6 @@ if ($action == "addelement") {
 
 $elementuser = new User($db);
 
-
-
 $showdatefilter = 0;
 // Show the filter on date on top of element list
 if (!$showdatefilter) {
