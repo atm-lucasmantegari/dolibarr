@@ -699,6 +699,8 @@ $resHook = $hookmanager->executeHooks('completeListOfReferent', $parameters, $ob
 
 if (!empty($hookmanager->resArray)) {
 	$listofreferent = array_merge($listofreferent, $hookmanager->resArray);
+} elseif ($resHook > 0 && !empty($hookmanager->resPrint)) {
+	$listofreferent = $hookmanager->resPrint;
 }
 
 if ($action == "addelement") {
@@ -720,8 +722,6 @@ if ($action == "addelement") {
 }
 
 $elementuser = new User($db);
-
-
 
 $showdatefilter = 0;
 // Show the filter on date on top of element list
