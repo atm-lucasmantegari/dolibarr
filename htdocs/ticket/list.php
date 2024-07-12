@@ -38,7 +38,7 @@ include_once DOL_DOCUMENT_ROOT.'/core/class/html.formprojet.class.php';
 include_once DOL_DOCUMENT_ROOT.'/core/lib/project.lib.php';
 
 // Load translation files required by the page
-$langs->loadLangs(array("ticket", "companies", "other", "projects"));
+$langs->loadLangs(array("ticket", "companies", "other", "projects", "contracts"));
 
 // Get parameters
 $action     = GETPOST('action', 'aZ09') ? GETPOST('action', 'aZ09') : 'view'; // The action 'add', 'create', 'edit', 'update', 'view', ...
@@ -342,7 +342,17 @@ $user_temp = new User($db);
 $socstatic = new Societe($db);
 
 $help_url = '';
-$title = $langs->trans('Tickets');
+
+$moretitle = '';
+if ($socid > 0) {
+	$socstatic->fetch($socid);
+	$moretitle = $langs->trans("ThirdParty") . ' - ';
+	if (getDolGlobalString('MAIN_HTML_TITLE') && preg_match('/thirdpartynameonly/', $conf->global->MAIN_HTML_TITLE) && $socstatic->name) {
+		$moretitle = $socstatic->name . ' - ';
+	}
+}
+
+$title = $moretitle . $langs->trans('Tickets');
 $morejs = array();
 $morecss = array();
 
@@ -404,7 +414,7 @@ foreach ($search as $key => $val) {
 			$sql .= natural_search($key, join(',', $newarrayofstatus), 2);
 		}
 		continue;
-	} elseif ($key == 'fk_user_assign' || $key == 'fk_user_create' || $key == 'fk_project') {
+	} elseif ($key == 'fk_user_assign' || $key == 'fk_user_create' || $key == 'fk_project' || $key == 'fk_contract') {
 		if ($search[$key] > 0) {
 			$sql .= natural_search($key, $search[$key], 2);
 		}
@@ -671,7 +681,7 @@ if ($optioncss != '') {
 // Add $param from extra fields
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
 // Add $param from hooks
-$parameters = array();
+$parameters = array('param' => &$param);
 $reshook = $hookmanager->executeHooks('printFieldListSearchParam', $parameters, $object); // Note that $action and $object may have been modified by hook
 $param .= $hookmanager->resPrint;
 if ($socid > 0) {
