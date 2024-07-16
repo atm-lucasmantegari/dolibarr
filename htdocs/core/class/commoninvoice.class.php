@@ -240,7 +240,7 @@ abstract class CommonInvoice extends CommonObject
 	 *	@return		float|int|array						Amount of payment already done, <0 and set ->error if KO
 	 *  @see getSumDepositsUsed(), getSumCreditNotesUsed()
 	 */
-	public function getSommePaiement($multicurrency = 0)
+	public function getSommePaiement($multicurrency = 0, &$nb = 0)
 	{
 		$table = 'paiement_facture';
 		$field = 'fk_facture';
@@ -249,7 +249,7 @@ abstract class CommonInvoice extends CommonObject
 			$field = 'fk_facturefourn';
 		}
 
-		$sql = "SELECT sum(amount) as amount, sum(multicurrency_amount) as multicurrency_amount";
+		$sql = "SELECT count(rowid) nb, sum(amount) as amount, sum(multicurrency_amount) as multicurrency_amount";
 		$sql .= " FROM ".$this->db->prefix().$table;
 		$sql .= " WHERE ".$field." = ".((int) $this->id);
 
@@ -258,7 +258,7 @@ abstract class CommonInvoice extends CommonObject
 		$resql = $this->db->query($sql);
 		if ($resql) {
 			$obj = $this->db->fetch_object($resql);
-
+			$nb = $obj->nb;
 			$this->db->free($resql);
 
 			if ($obj) {
