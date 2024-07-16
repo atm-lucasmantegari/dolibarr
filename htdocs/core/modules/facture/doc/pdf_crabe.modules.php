@@ -257,6 +257,7 @@ class pdf_crabe extends ModelePDFFactures
 
 		if ($conf->facture->dir_output) {
 			$object->fetch_thirdparty();
+			$hasPaiements = 0;
 			$deja_regle = $object->getSommePaiement((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0, $hasPaiements);
 			$amount_credit_notes_included = $object->getSumCreditNotesUsed((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0);
 			$amount_deposits_included = $object->getSumDepositsUsed((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0);
