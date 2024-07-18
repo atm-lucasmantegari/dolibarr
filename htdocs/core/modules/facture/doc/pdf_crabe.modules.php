@@ -257,8 +257,8 @@ class pdf_crabe extends ModelePDFFactures
 
 		if ($conf->facture->dir_output) {
 			$object->fetch_thirdparty();
-
-			$deja_regle = $object->getSommePaiement((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0);
+			$hasPaiements = 0;
+			$deja_regle = $object->getSommePaiement((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0, $hasPaiements);
 			$amount_credit_notes_included = $object->getSumCreditNotesUsed((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0);
 			$amount_deposits_included = $object->getSumDepositsUsed((isModEnabled("multicurrency") && $object->multicurrency_tx != 1) ? 1 : 0);
 
@@ -849,7 +849,7 @@ class pdf_crabe extends ModelePDFFactures
 				$posy = $this->_tableau_tot($pdf, $object, $deja_regle, $bottomlasttab, $outputlangs, $outputlangsbis);
 
 				// Display Payments area
-				if (($deja_regle || $amount_credit_notes_included || $amount_deposits_included) && !getDolGlobalString('INVOICE_NO_PAYMENT_DETAILS')) {
+				if (($hasPaiements || $deja_regle || $amount_credit_notes_included || $amount_deposits_included) && !getDolGlobalString('INVOICE_NO_PAYMENT_DETAILS')) {
 					$posy = $this->_tableau_versements($pdf, $object, $posy, $outputlangs, $heightforfooter);
 				}
 
